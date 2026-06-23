@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+// Serve static files from /public OR root (whichever exists)
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -494,7 +496,11 @@ app.get('/health', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const inPublic = path.join(__dirname, 'public', 'index.html');
+  const inRoot   = path.join(__dirname, 'index.html');
+  if (fs.existsSync(inPublic)) return res.sendFile(inPublic);
+  if (fs.existsSync(inRoot))   return res.sendFile(inRoot);
+  res.status(404).send('MRA: index.html not found. Please upload it to GitHub.');
 });
 
 app.listen(PORT, () => {
