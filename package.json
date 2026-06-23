@@ -1,7 +1,7 @@
 {
   "name": "mra-my-rights-app",
-  "version": "1.0.0",
-  "description": "MRA - My Rights App: Pakistani law guide for laypeople in Urdu & English",
+  "version": "2.0.0",
+  "description": "MRA - My Rights App: Pakistani law guide with lawyer registration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,9 @@
     "express": "^4.19.2",
     "dotenv": "^16.4.5",
     "cors": "^2.8.5",
-    "twilio": "^5.3.0"
+    "twilio": "^5.3.0",
+    "nodemailer": "^6.9.14",
+    "uuid": "^10.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
