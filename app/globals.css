@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
+
+:root {
+  --font-urdu: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Arial Unicode MS', serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f9fafb;
+  color: #1f2937;
+  min-height: 100vh;
+}
+
+.font-urdu {
+  font-family: var(--font-urdu);
+}
+
+/* Cursor blink for streaming */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 0.8s infinite;
+}
+
+/* Typing bounce dots */
+@keyframes bounce-dot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+.animate-bounce-dot {
+  animation: bounce-dot 1.2s infinite;
+}
+.animate-bounce-dot-2 {
+  animation: bounce-dot 1.2s infinite 0.2s;
+}
+.animate-bounce-dot-3 {
+  animation: bounce-dot 1.2s infinite 0.4s;
+}
