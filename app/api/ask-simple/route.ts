@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     if (typeof phone === 'string' && phone.trim()) {
       const { error } = await supabaseServer()
         .from('chat_history')
-        .insert({ phone: phone.trim(), question: message, response: text, lang: lang || 'en' });
+        .insert({ phone: phone.trim(), question: message, response: text, lang: lang === 'ur' ? 'ur' : 'en' });
       if (error) console.error('[chat_history insert]', error.message);
     }
 

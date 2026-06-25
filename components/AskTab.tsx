@@ -108,7 +108,6 @@ export default function AskTab({ lang }: { lang: Lang }) {
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState<string | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -118,24 +117,33 @@ export default function AskTab({ lang }: { lang: Lang }) {
 
   useEffect(() => { scrollDown(); }, [messages, scrollDown]);
 
-  // Read phone from localStorage — runs only on the client after hydration
+  // Read phone from localStorage on every mount.
+  // Tab switches cause a full unmount/remount so this runs every time the tab reopens.
   useEffect(() => {
     const stored = localStorage.getItem(PHONE_KEY);
+    console.log('[AskTab] localStorage read -> phone:', stored ?? '(none)');
     if (stored) {
       setPhone(stored);
     } else {
+      console.log('[AskTab] no phone saved - showing modal');
       setShowPhoneModal(true);
     }
   }, []);
 
-  // Fetch chat history once we have a phone number
+  // Fetch history whenever phone is set. AbortController lets React Strict Mode's
+  // double-invocation cancel the first in-flight request cleanly so only the
+  // second completes — no duplicate messages, no stale state.
   useEffect(() => {
-    if (!phone || historyLoaded) return;
-    setHistoryLoaded(true);
-    fetch(`/api/chat-history?phone=${encodeURIComponent(phone)}`)
+    if (!phone) return;
+    const url = `/api/chat-history?phone=${encodeURIComponent(phone)}`;
+    console.log('[AskTab] fetching history:', url);
+    const controller = new AbortController();
+    fetch(url, { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data.messages) && data.messages.length > 0) {
+        const count = Array.isArray(data.messages) ? data.messages.length : 0;
+        console.log('[AskTab] history returned', count, 'message(s)');
+        if (count > 0) {
           const loaded: ChatMessage[] = data.messages.flatMap(
             (m: { id: string; question: string; response: string }) => [
               { id: `${m.id}-q`, role: 'user' as const, text: m.question },
@@ -145,14 +153,20 @@ export default function AskTab({ lang }: { lang: Lang }) {
           setMessages(loaded);
         }
       })
-      .catch(() => {}); // history load failure is non-fatal
-  }, [phone, historyLoaded]);
+      .catch((err: Error) => {
+        if (err.name !== 'AbortError') {
+          console.warn('[AskTab] history fetch failed:', err.message);
+        }
+      });
+    return () => controller.abort();
+  }, [phone]);
 
   const savePhone = useCallback((p: string) => {
+    console.log('[AskTab] saving phone to localStorage:', p);
     localStorage.setItem(PHONE_KEY, p);
+    setMessages([]); // clear before loading the new phone's history
     setPhone(p);
     setShowPhoneModal(false);
-    setHistoryLoaded(false); // re-triggers history fetch for the new number
   }, []);
 
   const sendMessage = useCallback(
