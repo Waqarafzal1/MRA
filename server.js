@@ -111,6 +111,20 @@ app.post('/api/ask', async (req, res) => {
 // ─────────────────────────────────────────────
 // WHATSAPP WEBHOOK (Twilio)
 // ─────────────────────────────────────────────
+app.post('/api/ask-simple', async (req, res) => {
+  const { message, lang } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'AI not configured' });
+  try {
+    const langHint = lang === 'ur' ? 'Respond in Urdu (Nastaliq script).' : 'Respond in English.';
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001', max_tokens: 600,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: `${langHint}\n\nQuestion: ${message}` }]
+    });
+    res.json({ response: response.content[0].text });
+  } catch (e) { res.status(500).json({ error: 'AI error' }); }
+});
 app.post('/webhook/whatsapp', async (req, res) => {
   const msg = (req.body.Body || '').trim();
   function reply(text) {
