@@ -1,5 +1,6 @@
-import { loadData, saveData } from '@/lib/data';
+import { supabaseServer } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
+import type { Registration } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -10,25 +11,63 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Registration ID and OTP required' }, { status: 400 });
   }
 
-  const data = loadData();
-  const pending = data.otps[registrationId];
+  const db = supabaseServer();
 
-  if (!pending) {
-    return Response.json({ error: 'Registration not found. Please submit again.' }, { status: 404 });
+  const { data: pending, error: fetchError } = await db
+    .from('pending_otps')
+    .select('*')
+    .eq('id', registrationId)
+    .single();
+
+  if (fetchError || !pending) {
+    return Response.json(
+      { error: 'Registration not found. Please submit again.' },
+      { status: 404 },
+    );
   }
-  if (Date.now() > pending.expiresAt) {
-    delete data.otps[registrationId];
-    saveData(data);
+
+  // expires_at is stored as a BIGINT; PostgREST may return it as a string
+  const expiresAt = Number(pending.expires_at);
+  if (Date.now() > expiresAt) {
+    await db.from('pending_otps').delete().eq('id', registrationId);
     return Response.json({ error: 'OTP expired. Please register again.' }, { status: 410 });
   }
+
   if (pending.otp !== String(otp).trim()) {
     return Response.json({ error: 'Incorrect OTP. Please try again.' }, { status: 400 });
   }
 
-  const registration = { ...pending.registrationData, emailVerified: true };
-  data.registrations.push(registration);
-  delete data.otps[registrationId];
-  saveData(data);
+  // registration_data was stored as a camelCase JS object (see /api/register)
+  const registration = pending.registration_data as Registration;
+
+  const { error: insertError } = await db.from('registrations').insert({
+    id: registration.id,
+    full_name: registration.fullName,
+    cnic: registration.cnic,
+    license_number: registration.licenseNumber,
+    bar_council: registration.barCouncil,
+    specializations: registration.specializations,
+    city: registration.city,
+    court: registration.court,
+    experience: registration.experience,
+    phone: registration.phone,
+    email: registration.email,
+    languages: registration.languages,
+    about: registration.about,
+    status: registration.status,
+    email_verified: true,
+    submitted_at: registration.submittedAt,
+  });
+
+  if (insertError) {
+    console.error('[registrations insert]', insertError.message);
+    return Response.json(
+      { error: 'Failed to save registration. Please try again.' },
+      { status: 500 },
+    );
+  }
+
+  await db.from('pending_otps').delete().eq('id', registrationId);
 
   const appUrl = process.env.APP_URL || 'https://mra-production-56be.up.railway.app';
   const adminPassword = process.env.ADMIN_PASSWORD || 'mra-admin-2024';
@@ -83,6 +122,7 @@ export async function POST(request: Request) {
 
   return Response.json({
     success: true,
-    message: 'Email verified! Your registration is under review. You will be notified within 2-3 business days.',
+    message:
+      'Email verified! Your registration is under review. You will be notified within 2-3 business days.',
   });
 }

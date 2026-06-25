@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Lang, Lawyer } from '@/lib/types';
 import { T } from '@/lib/translations';
-import { DEMO_LAWYERS } from '@/lib/lawyers-data';
 
-const CITIES = ['Lahore', 'Karachi', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'];
-const SPECS = ['Family Law', 'Criminal Law', 'Property Law', 'Labour Law', 'Corporate Law', "Women's Rights", 'Cybercrime'];
+const CITIES = [
+  'Lahore', 'Karachi', 'Islamabad', 'Rawalpindi',
+  'Faisalabad', 'Multan', 'Peshawar', 'Quetta',
+];
+const SPECS = [
+  'Family Law', 'Criminal Law', 'Property Law', 'Labour Law',
+  'Corporate Law', "Women's Rights", 'Cybercrime',
+];
 
 function LawyerCard({ l }: { l: Lawyer }) {
   const waNumber = l.phone.replace(/-/g, '').replace(/^0/, '92');
@@ -51,8 +56,16 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
   const isUr = lang === 'ur';
   const [city, setCity] = useState('');
   const [spec, setSpec] = useState('');
+  const [lawyers, setLawyers] = useState<Lawyer[]>([]);
 
-  const filtered = DEMO_LAWYERS.filter(
+  useEffect(() => {
+    fetch('/api/lawyers')
+      .then((r) => r.json())
+      .then((data) => setLawyers(data.lawyers ?? []))
+      .catch(() => {});
+  }, []);
+
+  const filtered = lawyers.filter(
     (l) => (!city || l.city === city) && (!spec || l.spec === spec),
   );
 
@@ -72,7 +85,9 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
           className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:border-green-500 cursor-pointer"
         >
           <option value="">{t.allCities}</option>
-          {CITIES.map((c) => <option key={c}>{c}</option>)}
+          {CITIES.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
         </select>
         <select
           value={spec}
@@ -80,7 +95,9 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
           className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:border-green-500 cursor-pointer"
         >
           <option value="">{t.allSpecs}</option>
-          {SPECS.map((s) => <option key={s}>{s}</option>)}
+          {SPECS.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
       </div>
 

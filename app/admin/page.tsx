@@ -1,4 +1,4 @@
-import { loadData } from '@/lib/data';
+import { supabaseServer, rowToRegistration } from '@/lib/supabase';
 import type { Registration } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -40,8 +40,21 @@ function StatusBadge({ status }: { status: Registration['status'] }) {
   );
 }
 
-function RegCard({ r, adminKey, showActions }: { r: Registration; adminKey: string; showActions: boolean }) {
-  const initials = r.fullName.split(' ').map((w) => w[0]).join('').substring(0, 2).toUpperCase();
+function RegCard({
+  r,
+  adminKey,
+  showActions,
+}: {
+  r: Registration;
+  adminKey: string;
+  showActions: boolean;
+}) {
+  const initials = r.fullName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-4 mb-3">
       <div className="flex items-center gap-3 mb-2.5">
@@ -104,7 +117,11 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-export default function AdminPage({ searchParams }: { searchParams: { key?: string } }) {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { key?: string };
+}) {
   const adminPassword = process.env.ADMIN_PASSWORD || 'mra-admin-2024';
   const key = searchParams.key || '';
 
@@ -112,10 +129,18 @@ export default function AdminPage({ searchParams }: { searchParams: { key?: stri
     return <LoginForm />;
   }
 
-  const data = loadData();
-  const pending = data.registrations.filter((r) => r.status === 'pending');
-  const approved = data.registrations.filter((r) => r.status === 'approved');
-  const rejected = data.registrations.filter((r) => r.status === 'rejected');
+  const { data: rows } = await supabaseServer()
+    .from('registrations')
+    .select('*')
+    .order('submitted_at', { ascending: false });
+
+  const registrations = (rows ?? []).map((r) =>
+    rowToRegistration(r as Record<string, unknown>),
+  );
+
+  const pending = registrations.filter((r) => r.status === 'pending');
+  const approved = registrations.filter((r) => r.status === 'approved');
+  const rejected = registrations.filter((r) => r.status === 'rejected');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -163,7 +188,9 @@ export default function AdminPage({ searchParams }: { searchParams: { key?: stri
           ✅ Approved ({approved.length})
         </h2>
         {approved.length ? (
-          approved.map((r) => <RegCard key={r.id} r={r} adminKey={key} showActions={false} />)
+          approved.map((r) => (
+            <RegCard key={r.id} r={r} adminKey={key} showActions={false} />
+          ))
         ) : (
           <EmptyState text="No approved lawyers yet" />
         )}
@@ -172,7 +199,9 @@ export default function AdminPage({ searchParams }: { searchParams: { key?: stri
           ✗ Rejected ({rejected.length})
         </h2>
         {rejected.length ? (
-          rejected.map((r) => <RegCard key={r.id} r={r} adminKey={key} showActions={false} />)
+          rejected.map((r) => (
+            <RegCard key={r.id} r={r} adminKey={key} showActions={false} />
+          ))
         ) : (
           <EmptyState text="No rejected registrations" />
         )}

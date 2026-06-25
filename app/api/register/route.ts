@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { loadData, saveData } from '@/lib/data';
+import { supabaseServer } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
@@ -11,7 +11,9 @@ export async function POST(request: Request) {
     city, court, experience, phone, email, languages, about,
   } = body;
 
-  const required: Record<string, string> = { fullName, cnic, licenseNumber, barCouncil, city, phone, email };
+  const required: Record<string, string> = {
+    fullName, cnic, licenseNumber, barCouncil, city, phone, email,
+  };
   for (const [key, val] of Object.entries(required)) {
     if (!val || !String(val).trim()) {
       return Response.json({ error: `${key} is required` }, { status: 400 });
@@ -28,12 +30,18 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid phone number' }, { status: 400 });
   }
 
-  const data = loadData();
+  const licenseNumberClean = String(licenseNumber).trim();
+  const emailClean = String(email).toLowerCase().trim();
+  const db = supabaseServer();
 
-  const duplicate = data.registrations.find(
-    (r) => r.licenseNumber === licenseNumber || r.email === String(email).toLowerCase(),
-  );
-  if (duplicate) {
+  // Check for duplicates on license number and email separately to avoid
+  // PostgREST filter-string encoding issues with special characters in email.
+  const [{ data: byLicense }, { data: byEmail }] = await Promise.all([
+    db.from('registrations').select('id').eq('license_number', licenseNumberClean).limit(1),
+    db.from('registrations').select('id').eq('email', emailClean).limit(1),
+  ]);
+
+  if ((byLicense?.length ?? 0) > 0 || (byEmail?.length ?? 0) > 0) {
     return Response.json(
       { error: 'A registration with this license number or email already exists.' },
       { status: 409 },
@@ -44,29 +52,43 @@ export async function POST(request: Request) {
   const registrationId = uuidv4();
   const expiresAt = Date.now() + 15 * 60 * 1000;
 
-  data.otps[registrationId] = {
-    otp,
-    expiresAt,
-    registrationData: {
-      id: registrationId,
-      fullName: String(fullName).trim(),
-      cnic: String(cnic).replace(/-/g, ''),
-      licenseNumber: String(licenseNumber).trim(),
-      barCouncil,
-      specializations: Array.isArray(specializations) ? specializations : [specializations].filter(Boolean),
-      city,
-      court: court?.trim() || '',
-      experience: parseInt(experience) || 0,
-      phone: String(phone).trim(),
-      email: String(email).toLowerCase().trim(),
-      languages: Array.isArray(languages) ? languages : [languages].filter(Boolean),
-      about: about?.trim() || '',
-      status: 'pending',
-      emailVerified: false,
-      submittedAt: new Date().toISOString(),
-    },
+  // Store the registration data as camelCase JSONB so the verify route can
+  // read it back as a Registration object without any conversion.
+  const registrationData = {
+    id: registrationId,
+    fullName: String(fullName).trim(),
+    cnic: String(cnic).replace(/-/g, ''),
+    licenseNumber: licenseNumberClean,
+    barCouncil,
+    specializations: Array.isArray(specializations)
+      ? specializations
+      : [specializations].filter(Boolean),
+    city,
+    court: court?.trim() || '',
+    experience: parseInt(experience) || 0,
+    phone: String(phone).trim(),
+    email: emailClean,
+    languages: Array.isArray(languages) ? languages : [languages].filter(Boolean),
+    about: about?.trim() || '',
+    status: 'pending',
+    emailVerified: false,
+    submittedAt: new Date().toISOString(),
   };
-  saveData(data);
+
+  const { error: otpError } = await db.from('pending_otps').insert({
+    id: registrationId,
+    otp,
+    expires_at: expiresAt,
+    registration_data: registrationData,
+  });
+
+  if (otpError) {
+    console.error('[pending_otps insert]', otpError.message);
+    return Response.json(
+      { error: 'Failed to store registration. Please try again.' },
+      { status: 500 },
+    );
+  }
 
   await sendEmail(
     email,

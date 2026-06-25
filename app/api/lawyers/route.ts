@@ -1,26 +1,17 @@
-import { loadData } from '@/lib/data';
+import { supabaseServer } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const data = loadData();
-  const approved = data.registrations
-    .filter((r) => r.status === 'approved')
-    .map((r) => ({
-      name: 'Adv. ' + r.fullName,
-      city: r.city,
-      spec: r.specializations[0] || 'General',
-      exp: r.experience + ' years',
-      court: r.court,
-      phone: r.phone,
-      avatar: r.fullName
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .substring(0, 2)
-        .toUpperCase(),
-      verified: true,
-    }));
-  return Response.json({ lawyers: approved });
+  const { data, error } = await supabaseServer()
+    .from('lawyers')
+    .select('name, city, spec, exp, court, phone, avatar, verified')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('[lawyers GET]', error.message);
+    return Response.json({ lawyers: [] });
+  }
+  return Response.json({ lawyers: data ?? [] });
 }

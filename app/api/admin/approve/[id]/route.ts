@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { loadData, saveData } from '@/lib/data';
+import { supabaseServer, rowToRegistration } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
@@ -16,12 +16,40 @@ export async function POST(
     return new Response('Unauthorized', { status: 403 });
   }
 
-  const data = loadData();
-  const reg = data.registrations.find((r) => r.id === params.id);
-  if (reg) {
-    reg.status = 'approved';
-    reg.approvedAt = new Date().toISOString();
-    saveData(data);
+  const db = supabaseServer();
+
+  const { data: updated, error } = await db
+    .from('registrations')
+    .update({ status: 'approved', approved_at: new Date().toISOString() })
+    .eq('id', params.id)
+    .select()
+    .single();
+
+  if (!error && updated) {
+    const reg = rowToRegistration(updated as Record<string, unknown>);
+
+    const initials = reg.fullName
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+
+    // Insert into the lawyers directory; upsert avoids duplicates on re-approval
+    const { error: lawyerError } = await db.from('lawyers').upsert(
+      {
+        name: 'Adv. ' + reg.fullName,
+        city: reg.city,
+        spec: reg.specializations[0] ?? 'General',
+        exp: reg.experience + ' years',
+        court: reg.court,
+        phone: reg.phone,
+        avatar: initials,
+        verified: true,
+      },
+      { onConflict: 'phone,name' },
+    );
+    if (lawyerError) console.error('[lawyers upsert]', lawyerError.message);
 
     await sendEmail(
       reg.email,

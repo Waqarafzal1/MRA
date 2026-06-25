@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { loadData, saveData } from '@/lib/data';
+import { supabaseServer, rowToRegistration } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
@@ -16,12 +16,17 @@ export async function POST(
     return new Response('Unauthorized', { status: 403 });
   }
 
-  const data = loadData();
-  const reg = data.registrations.find((r) => r.id === params.id);
-  if (reg) {
-    reg.status = 'rejected';
-    reg.rejectedAt = new Date().toISOString();
-    saveData(data);
+  const db = supabaseServer();
+
+  const { data: updated, error } = await db
+    .from('registrations')
+    .update({ status: 'rejected', rejected_at: new Date().toISOString() })
+    .eq('id', params.id)
+    .select()
+    .single();
+
+  if (!error && updated) {
+    const reg = rowToRegistration(updated as Record<string, unknown>);
 
     await sendEmail(
       reg.email,
