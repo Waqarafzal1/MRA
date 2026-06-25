@@ -66,43 +66,22 @@ export default function AskTab({ lang }: { lang: Lang }) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/ask', {
+      const res = await fetch('/api/ask-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: q, language: lang }),
+        body: JSON.stringify({ message: q, lang }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json();
 
-      const reader = res.body!.getReader();
-      const dec = new TextDecoder();
-      let full = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const lines = dec.decode(value, { stream: true }).split('\n');
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.text) {
-              full += data.text;
-              setMessages((prev) =>
-                prev.map((m) => (m.id === botId ? { ...m, text: full } : m)),
-              );
-            }
-            if (data.done || data.error) {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === botId
-                    ? { ...m, text: data.error ? t.errorMsg : full, streaming: false }
-                    : m,
-                ),
-              );
-            }
-          } catch { /* malformed chunk */ }
-        }
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Request failed');
       }
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botId ? { ...m, text: data.response, streaming: false } : m,
+        ),
+      );
     } catch {
       setMessages((prev) =>
         prev.map((m) =>
