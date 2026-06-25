@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL, SYSTEM_PROMPT } from '@/lib/ai';
+import { getAnthropic, AI_MODEL, SYSTEM_PROMPT } from '@/lib/ai';
 
 export const runtime = 'nodejs';
 
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   try {
     const hasUrdu = /[؀-ۿ]/.test(msg);
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: AI_MODEL,
       max_tokens: 500,
       system: SYSTEM_PROMPT,

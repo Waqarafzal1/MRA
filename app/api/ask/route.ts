@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL, SYSTEM_PROMPT } from '@/lib/ai';
+import { getAnthropic, AI_MODEL, SYSTEM_PROMPT } from '@/lib/ai';
 
 export const runtime = 'nodejs';
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const readable = new ReadableStream({
     start(controller) {
       try {
-        const stream = anthropic.messages.stream({
+        const stream = getAnthropic().messages.stream({
           model: AI_MODEL,
           max_tokens: 600,
           system: SYSTEM_PROMPT,

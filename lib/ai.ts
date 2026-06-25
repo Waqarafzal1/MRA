@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-export const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+export function getAnthropic(): Anthropic {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
 
 export const AI_MODEL = 'claude-haiku-4-5-20251001';
 
