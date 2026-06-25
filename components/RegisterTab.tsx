@@ -200,13 +200,13 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Personal */}
-        <div className="col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
+        <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
           Personal Information
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1">
+        <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
           <label className={labelCls}>Full Name <span className="text-red-600">*</span></label>
           <input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Muhammad Bilal Khan" maxLength={100} />
         </div>
@@ -222,14 +222,14 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
           <input className={inputCls} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="03001234567" />
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1">
+        <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
           <label className={labelCls}>Email Address <span className="text-red-600">*</span></label>
           <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="youremail@gmail.com" />
           <span className="text-[11px] text-gray-400">An OTP will be sent here to verify your email</span>
         </div>
 
-        <hr className="col-span-2 border-gray-200" />
-        <div className="col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
+        <hr className="col-span-1 sm:col-span-2 border-gray-200" />
+        <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
           Professional Credentials
         </div>
 
@@ -267,17 +267,17 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
           </select>
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1">
+        <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
           <label className={labelCls}>Court(s) Where You Practice</label>
           <input className={inputCls} value={court} onChange={(e) => setCourt(e.target.value)} placeholder="e.g. Lahore High Court, Sessions Court Lahore" />
         </div>
 
-        <hr className="col-span-2 border-gray-200" />
-        <div className="col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
+        <hr className="col-span-1 sm:col-span-2 border-gray-200" />
+        <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
           Specialization
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1">
+        <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
           <label className={labelCls}>Areas of Practice <span className="text-red-600">*</span></label>
           <div className="flex flex-wrap gap-2 mt-1">
             {SPECS.map((s) => (
@@ -294,7 +294,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
           </div>
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1">
+        <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
           <label className={labelCls}>Languages</label>
           <div className="flex flex-wrap gap-2 mt-1">
             {LANGS.map((l) => (
@@ -311,12 +311,12 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
           </div>
         </div>
 
-        <hr className="col-span-2 border-gray-200" />
-        <div className="col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
+        <hr className="col-span-1 sm:col-span-2 border-gray-200" />
+        <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
           About You
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1">
+        <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
           <label className={labelCls}>Brief Bio / About</label>
           <textarea
             className={`${inputCls} resize-y min-h-[80px]`}
@@ -326,7 +326,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
           />
         </div>
 
-        <div className="col-span-2">
+        <div className="col-span-1 sm:col-span-2">
           <label className="flex items-start gap-2 text-xs text-gray-700 cursor-pointer">
             <input
               type="checkbox"

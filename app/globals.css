@@ -19,6 +19,15 @@ body {
   background-color: #f9fafb;
   color: #1f2937;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* iOS safe-area padding for fixed bottom bars */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe-bar {
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 
 .font-urdu {

@@ -30,10 +30,10 @@ function LawyerCard({ l }: { l: Lawyer }) {
           <span className="mr-2.5">⚖️ {l.court}</span>
           <span>🕐 {l.exp}</span>
         </div>
-        <div className="flex gap-1.5 mt-2">
+        <div className="flex flex-wrap gap-1.5 mt-2">
           <a
             href={`tel:${l.phone}`}
-            className="bg-green-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg no-underline hover:bg-green-700 transition-colors"
+            className="bg-green-800 text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:bg-green-700 transition-colors min-h-[36px] flex items-center"
           >
             📞 {l.phone}
           </a>
@@ -41,7 +41,7 @@ function LawyerCard({ l }: { l: Lawyer }) {
             href={`https://wa.me/${waNumber}`}
             target="_blank"
             rel="noreferrer"
-            className="bg-wa-green text-white text-xs font-semibold px-3 py-1.5 rounded-lg no-underline hover:opacity-90 transition-opacity"
+            className="bg-wa-green text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:opacity-90 transition-opacity min-h-[36px] flex items-center"
           >
             💬 WhatsApp
           </a>

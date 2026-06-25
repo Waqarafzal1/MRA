@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { Lang, ChatMessage } from '@/lib/types';
 import { T } from '@/lib/translations';
+import { normalizePhone } from '@/lib/phone';
 
 const PHONE_KEY = 'mra_user_phone';
 
@@ -77,7 +78,7 @@ function PhoneModal({
           value={val}
           onChange={(e) => setVal(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-          placeholder="03XX-XXXXXXX"
+          placeholder="03XXXXXXXXX"
           autoFocus
           className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 mb-3 text-center tracking-widest"
           dir="ltr"
@@ -121,9 +122,12 @@ export default function AskTab({ lang }: { lang: Lang }) {
   // Tab switches cause a full unmount/remount so this runs every time the tab reopens.
   useEffect(() => {
     const stored = localStorage.getItem(PHONE_KEY);
-    console.log('[AskTab] localStorage read -> phone:', stored ?? '(none)');
     if (stored) {
-      setPhone(stored);
+      const normalized = normalizePhone(stored);
+      console.log('[AskTab] localStorage read -> raw:', stored, '-> normalized:', normalized);
+      // Re-save normalized form so future reads are already clean
+      if (normalized !== stored) localStorage.setItem(PHONE_KEY, normalized);
+      setPhone(normalized);
     } else {
       console.log('[AskTab] no phone saved - showing modal');
       setShowPhoneModal(true);
@@ -162,10 +166,11 @@ export default function AskTab({ lang }: { lang: Lang }) {
   }, [phone]);
 
   const savePhone = useCallback((p: string) => {
-    console.log('[AskTab] saving phone to localStorage:', p);
-    localStorage.setItem(PHONE_KEY, p);
+    const normalized = normalizePhone(p);
+    console.log('[AskTab] saving phone -> raw:', p, '-> normalized:', normalized);
+    localStorage.setItem(PHONE_KEY, normalized);
     setMessages([]); // clear before loading the new phone's history
-    setPhone(p);
+    setPhone(normalized);
     setShowPhoneModal(false);
   }, []);
 
@@ -255,7 +260,7 @@ export default function AskTab({ lang }: { lang: Lang }) {
       </div>
 
       {/* Categories grid */}
-      <div className="grid grid-cols-3 gap-1.5" dir={isUr ? 'rtl' : 'ltr'}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5" dir={isUr ? 'rtl' : 'ltr'}>
         {CATEGORIES.map((cat) => (
           <button
             key={cat.en}
@@ -274,7 +279,7 @@ export default function AskTab({ lang }: { lang: Lang }) {
       </div>
 
       {/* Chat area */}
-      <div className="flex flex-col gap-3 pb-32">
+      <div className="flex flex-col gap-3 pb-36">
         {/* Welcome bubble — shown only when there are no messages */}
         {messages.length === 0 && (
           <div
@@ -348,7 +353,7 @@ export default function AskTab({ lang }: { lang: Lang }) {
       </div>
 
       {/* Fixed input bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-3.5 py-2.5 z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-3.5 pt-2.5 pb-safe-bar z-40">
         <div className="max-w-[760px] mx-auto flex" dir={isUr ? 'rtl' : 'ltr'}>
           <input
             ref={inputRef}

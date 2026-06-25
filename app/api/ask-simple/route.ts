@@ -1,5 +1,6 @@
 import { getAnthropic, AI_MODEL, SYSTEM_PROMPT } from '@/lib/ai';
 import { supabaseServer } from '@/lib/supabase';
+import { normalizePhone } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 
@@ -27,10 +28,22 @@ export async function POST(request: Request) {
 
     // Persist the Q&A if the client supplied a phone number
     if (typeof phone === 'string' && phone.trim()) {
-      const { error } = await supabaseServer()
+      const normalizedPhone = normalizePhone(phone);
+      console.log('[ask-simple] persisting for phone:', normalizedPhone, '(raw:', phone.trim(), ')');
+      const { data: inserted, error } = await supabaseServer()
         .from('chat_history')
-        .insert({ phone: phone.trim(), question: message, response: text, lang: lang === 'ur' ? 'ur' : 'en' });
-      if (error) console.error('[chat_history insert]', error.message);
+        .insert({
+          phone: normalizedPhone,
+          question: message,
+          response: text,
+          lang: lang === 'ur' ? 'ur' : 'en',
+        })
+        .select('id, phone');
+      if (error) {
+        console.error('[ask-simple] insert FAILED:', error.code, error.message, error.details);
+      } else {
+        console.log('[ask-simple] insert OK — row id:', inserted?.[0]?.id, 'phone:', inserted?.[0]?.phone);
+      }
     }
 
     return Response.json({ response: text });

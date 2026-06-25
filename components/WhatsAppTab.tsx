@@ -15,9 +15,9 @@ export default function WhatsAppTab({ lang }: { lang: Lang }) {
   return (
     <div className="pt-3.5" dir={isUr ? 'rtl' : 'ltr'}>
       {/* Banner */}
-      <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3.5 mb-3 flex items-center gap-3">
+      <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3.5 mb-3 flex flex-wrap items-center gap-3">
         <div className="text-3xl flex-shrink-0">📱</div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-[140px]">
           <h3 className={`text-sm font-bold text-green-800 mb-0.5 ${isUr ? 'font-urdu' : ''}`}>
             {t.waTitle}
           </h3>
@@ -27,7 +27,7 @@ export default function WhatsAppTab({ lang }: { lang: Lang }) {
           href="https://wa.me/923345000073?text=Assalamu+Alaikum%2C+mujhe+qanooni+madad+chahiye"
           target="_blank"
           rel="noreferrer"
-          className={`bg-wa-green text-white rounded-lg px-3.5 py-2 text-sm font-bold whitespace-nowrap no-underline hover:opacity-90 transition-opacity ${isUr ? 'font-urdu' : ''}`}
+          className={`bg-wa-green text-white rounded-lg px-3.5 py-2.5 text-sm font-bold whitespace-nowrap no-underline hover:opacity-90 transition-opacity min-h-[44px] flex items-center ${isUr ? 'font-urdu' : ''}`}
         >
           {t.waBtn}
         </a>
