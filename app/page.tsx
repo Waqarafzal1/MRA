@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import AskTab from '@/components/AskTab';
 import WhatsAppTab from '@/components/WhatsAppTab';
@@ -8,11 +8,20 @@ import LawyersTab from '@/components/LawyersTab';
 import RegisterTab from '@/components/RegisterTab';
 import type { Lang, Tab } from '@/lib/types';
 import { T } from '@/lib/translations';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>('ask');
   const [lang, setLang] = useState<Lang>('en');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const t = T[lang];
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserEmail(user?.email ?? null);
+    });
+  }, []);
 
   const tabs: { id: Tab; icon: string; label: string }[] = [
     { id: 'ask',      icon: '⚖️', label: t.tabAsk },
@@ -23,7 +32,7 @@ export default function Home() {
 
   return (
     <>
-      <Header lang={lang} onLangChange={setLang} />
+      <Header lang={lang} onLangChange={setLang} userEmail={userEmail} />
 
       {/* Tab bar */}
       <div className="bg-white border-b border-gray-200 sticky top-[57px] z-40">
