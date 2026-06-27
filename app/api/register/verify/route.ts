@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   const adminPassword = process.env.ADMIN_PASSWORD || 'mra-admin-2024';
 
   await sendEmail(
-    process.env.EMAIL_USER || process.env.ADMIN_EMAIL || '',
+    process.env.ADMIN_EMAIL || '',
     `MRA — New Lawyer Registration: ${registration.fullName}`,
     `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
       <h2 style="color:#166534;">New Lawyer Registration — Pending Approval</h2>

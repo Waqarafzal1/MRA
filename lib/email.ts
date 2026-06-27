@@ -1,28 +1,30 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-function getMailer() {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) return null;
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_APP_PASSWORD },
-  });
-}
-
-export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  const mailer = getMailer();
-  if (!mailer) {
-    console.log('Email not configured — skipping send to', to);
-    return;
+export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error('[email] RESEND_API_KEY is not set — skipping send to', to);
+    return false;
   }
+
+  const resend = new Resend(apiKey);
   try {
-    await mailer.sendMail({
-      from: `"MRA My Rights App" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'My Rights App <noreply@my-rights-app.com>',
       to,
       subject,
       html,
     });
-    console.log('Email sent to', to);
+
+    if (error) {
+      console.error('[email] Resend error sending to', to, '—', error.message);
+      return false;
+    }
+
+    console.log('[email] Sent to', to, '| id:', data?.id);
+    return true;
   } catch (e) {
-    console.error('Email error:', (e as Error).message);
+    console.error('[email] Unexpected error sending to', to, '—', (e as Error).message);
+    return false;
   }
 }

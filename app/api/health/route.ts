@@ -9,7 +9,7 @@ export async function GET() {
     status: 'ok',
     service: 'MRA - My Rights App',
     ai: !!process.env.ANTHROPIC_API_KEY,
-    email: !!process.env.EMAIL_USER,
+    email: !!process.env.RESEND_API_KEY,
     whatsapp: !!process.env.TWILIO_ACCOUNT_SID,
     registrations: data.registrations.length,
     pending: data.registrations.filter((r) => r.status === 'pending').length,
