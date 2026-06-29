@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   try {
     const response = await getAnthropic().messages.create({
       model: AI_MODEL,
-      max_tokens: 500,
+      max_tokens: 600,
       system: GROUNDED_ANSWER_SYSTEM_PROMPT,
       messages: [
         {
