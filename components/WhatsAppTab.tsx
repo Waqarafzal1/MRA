@@ -4,7 +4,7 @@ import { T } from '@/lib/translations';
 import { useLang } from '@/lib/lang-context';
 
 export default function WhatsAppTab() {
-  const { dir } = useLang();
+  const { lang, dir } = useLang();
   const t = T[lang];
 
   const steps = [
