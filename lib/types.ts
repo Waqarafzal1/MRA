@@ -61,3 +61,16 @@ export interface LawSection {
   sourceUrl: string;
   amendedUpTo: string;
 }
+
+export type LegalNewsStatus = 'pending' | 'approved' | 'rejected';
+
+export interface LegalNews {
+  id: string;
+  headline: string;
+  summary: string;
+  sourceName: string;
+  sourceUrl: string;
+  publishedDate: string;
+  status: LegalNewsStatus;
+  createdAt: string;
+}

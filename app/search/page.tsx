@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import FreeQuestionsCounter from '@/components/FreeQuestionsCounter';
 import { useAuth } from '@/lib/auth-context';
 import type { LawSection } from '@/lib/types';
-import { pickSectionsForAnswer } from '@/lib/grounded-answer';
+import { pickSectionsForAnswer, type TwoLayerAnswer } from '@/lib/grounded-answer';
 import {
   getQuestionCount,
   incrementQuestionCount,
@@ -51,7 +51,7 @@ function SearchResults() {
   const { userEmail, openSignIn } = useAuth();
   const signedIn = !!userEmail;
   const [results, setResults] = useState<LawSection[]>([]);
-  const [explanation, setExplanation] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<TwoLayerAnswer | null>(null);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [loadingAnswer, setLoadingAnswer] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +61,7 @@ function SearchResults() {
   useEffect(() => {
     if (!q) {
       setResults([]);
-      setExplanation(null);
+      setAnswer(null);
       setError(null);
       setAnswerError(null);
       return;
@@ -74,7 +74,7 @@ function SearchResults() {
       setLoadingAnswer(false);
       setError(null);
       setAnswerError(null);
-      setExplanation(null);
+      setAnswer(null);
       setResults([]);
       setAiGated(false);
 
@@ -111,7 +111,8 @@ function SearchResults() {
           body: JSON.stringify({ question: q, sections: grounded }),
         });
         const answerData = (await answerRes.json()) as {
-          explanation?: string;
+          verifiedLaw?: string;
+          generalGuidance?: string;
           error?: string;
         };
 
@@ -119,8 +120,11 @@ function SearchResults() {
 
         if (!answerRes.ok) {
           setAnswerError(answerData.error ?? t.couldNotExplain);
-        } else if (answerData.explanation) {
-          setExplanation(answerData.explanation);
+        } else if (answerData.verifiedLaw && answerData.generalGuidance) {
+          setAnswer({
+            verifiedLaw: answerData.verifiedLaw,
+            generalGuidance: answerData.generalGuidance,
+          });
           if (!signedIn) {
             incrementQuestionCount();
           }
@@ -180,35 +184,68 @@ function SearchResults() {
 
   return (
     <div className="flex flex-col gap-4 pb-8" dir={dir}>
-      <section className="bg-brand/5 border-2 border-brand/20 rounded-xl p-4">
-        <p className="text-[11px] font-bold text-brand uppercase tracking-wider mb-2">
-          {t.inPlainWords}
-        </p>
+      {/* Layer 1 — verified database law (green) */}
+      <section className="bg-brand/5 border-2 border-brand/30 rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="flex-shrink-0 w-6 h-6 rounded-full bg-brand/15 text-brand flex items-center justify-center text-sm font-bold"
+            aria-hidden="true"
+          >
+            ✓
+          </span>
+          <p className="text-[11px] font-bold text-brand uppercase tracking-wider">
+            {t.verifiedLawTitle}
+          </p>
+        </div>
+
         {loadingAnswer ? (
-          <p className="text-stone-600 text-sm">{t.preparingExplanation}</p>
+          <p className="text-stone-600 text-sm mb-4">{t.preparingExplanation}</p>
         ) : aiGated ? (
-          <p className="text-stone-600 text-sm leading-relaxed">
+          <p className="text-stone-600 text-sm leading-relaxed mb-4">
             {gateMessage(lang)} {t.gateLawFree}
           </p>
         ) : answerError ? (
-          <p className="text-stone-600 text-sm">{answerError}</p>
-        ) : (
-          <p className="text-stone-800 text-sm leading-relaxed whitespace-pre-wrap">
-            {explanation}
+          <p className="text-stone-600 text-sm mb-4">{answerError}</p>
+        ) : answer ? (
+          <p className="text-stone-800 text-sm leading-relaxed whitespace-pre-wrap mb-4">
+            {answer.verifiedLaw}
           </p>
-        )}
-      </section>
+        ) : null}
 
-      <section>
-        <p className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2">
-          {t.lawFromDb}
-        </p>
         <div className="flex flex-col gap-3">
           {displayedSections.map((section, i) => (
             <SectionCard key={`${section.sectionRef}-${i}`} section={section} />
           ))}
         </div>
       </section>
+
+      {/* Layer 2 — general AI guidance (amber) */}
+      {!aiGated && !answerError && (loadingAnswer || answer) && (
+        <section className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg flex-shrink-0" aria-hidden="true">
+              💡
+            </span>
+            <p className="text-[11px] font-bold text-amber-900 uppercase tracking-wider">
+              {t.generalGuidanceTitle}
+            </p>
+          </div>
+          {loadingAnswer ? (
+            <p className="text-amber-900/80 text-sm">{t.preparingExplanation}</p>
+          ) : answer ? (
+            <p className="text-amber-950 text-sm leading-relaxed whitespace-pre-wrap">
+              {answer.generalGuidance}
+            </p>
+          ) : null}
+        </section>
+      )}
+
+      {/* AI reasoning footer — always when answer layers shown or loading */}
+      {!aiGated && !answerError && (loadingAnswer || answer) && (
+        <p className="text-[11px] text-stone-500 text-center leading-relaxed px-2">
+          {t.aiReasoningFooter}
+        </p>
+      )}
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
         {t.searchDisclaimer}

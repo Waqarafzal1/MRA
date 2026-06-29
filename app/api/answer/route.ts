@@ -1,6 +1,8 @@
 import { getAnthropic, AI_MODEL, GROUNDED_ANSWER_SYSTEM_PROMPT } from '@/lib/ai';
 import {
   buildGroundedAnswerUserMessage,
+  generalGuidanceCitesUnknownSection,
+  parseTwoLayerAnswer,
   pickSectionsForAnswer,
 } from '@/lib/grounded-answer';
 import type { LawSection } from '@/lib/types';
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
   try {
     const response = await getAnthropic().messages.create({
       model: AI_MODEL,
-      max_tokens: 600,
+      max_tokens: 900,
       system: GROUNDED_ANSWER_SYSTEM_PROMPT,
       messages: [
         {
@@ -67,16 +69,31 @@ export async function POST(request: Request) {
       ],
     });
 
-    const explanation =
+    const raw =
       response.content[0]?.type === 'text' ? response.content[0].text.trim() : '';
 
-    if (!explanation) {
+    if (!raw) {
       return Response.json({ error: 'Empty AI response' }, { status: 500 });
+    }
+
+    const layers = parseTwoLayerAnswer(raw);
+    if (!layers) {
+      console.error('[answer POST] Failed to parse two-layer JSON:', raw.slice(0, 200));
+      return Response.json({ error: 'Could not parse AI response' }, { status: 500 });
+    }
+
+    const unknownRefs = generalGuidanceCitesUnknownSection(
+      layers.generalGuidance,
+      grounded,
+    );
+    if (unknownRefs.length > 0) {
+      console.warn('[answer POST] General guidance cited unknown sections:', unknownRefs);
     }
 
     return Response.json({
       question: q,
-      explanation,
+      verifiedLaw: layers.verifiedLaw,
+      generalGuidance: layers.generalGuidance,
       groundedSectionRefs: grounded.map((s) => s.sectionRef),
     });
   } catch (err) {

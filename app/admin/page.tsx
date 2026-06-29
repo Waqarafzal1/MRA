@@ -154,6 +154,9 @@ export default async function AdminPage({
           <a href="/admin" className="text-white/70 text-sm hover:text-white">
             Logout
           </a>
+          <a href={`/admin/news?key=${key}`} className="text-white/70 text-sm hover:text-white">
+            News →
+          </a>
         </div>
       </div>
 

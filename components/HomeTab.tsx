@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FreeQuestionsCounter from '@/components/FreeQuestionsCounter';
+import LegalNewsStrip from '@/components/LegalNewsStrip';
 import type { Tab } from '@/lib/types';
 import { T } from '@/lib/translations';
 import { useLang } from '@/lib/lang-context';
@@ -118,6 +119,8 @@ export default function HomeTab({
       </form>
 
       <FreeQuestionsCounter />
+
+      <LegalNewsStrip />
 
       <div className="mb-6">
         <h2 className="text-sm font-bold text-stone-800 mb-3">{t.knowRightsToday}</h2>

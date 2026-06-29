@@ -138,3 +138,24 @@ INSERT INTO lawyers (name,                    city,         spec,              e
   ('Adv. Zahid Khan',      'Peshawar',   'Criminal Law',    '20 years', 'Peshawar High Court',        '0333-5558866', 'ZK',   false),
   ('Adv. Mariam Baloch',   'Quetta',     'Family Law',      '7 years',  'Family Court Quetta',        '0300-7771199', 'MB',   false)
 ON CONFLICT (phone, name) DO NOTHING;
+
+
+-- =============================================================================
+-- TABLE: legal_news
+-- Curated legal news with human approval (Stage 1 — manual entries)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS legal_news (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  headline       TEXT        NOT NULL,
+  summary        TEXT        NOT NULL,
+  source_name    TEXT        NOT NULL,
+  source_url     TEXT        NOT NULL,
+  published_date DATE        NOT NULL,
+  status         TEXT        NOT NULL DEFAULT 'pending'
+                             CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_news_status_published
+  ON legal_news (status, published_date DESC);
+

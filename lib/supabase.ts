@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { LawSection, Registration } from './types';
+import type { LawSection, LegalNews, Registration } from './types';
 
 let _client: SupabaseClient | null = null;
 
@@ -53,5 +53,18 @@ export function rowToLawSection(row: Record<string, unknown>): LawSection {
     source: (row.source as string) ?? '',
     sourceUrl: (row.source_url as string) ?? '',
     amendedUpTo: (row.amended_up_to as string) ?? '',
+  };
+}
+
+export function rowToLegalNews(row: Record<string, unknown>): LegalNews {
+  return {
+    id: row.id as string,
+    headline: row.headline as string,
+    summary: row.summary as string,
+    sourceName: row.source_name as string,
+    sourceUrl: row.source_url as string,
+    publishedDate: row.published_date as string,
+    status: row.status as LegalNews['status'],
+    createdAt: row.created_at as string,
   };
 }
