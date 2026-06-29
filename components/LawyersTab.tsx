@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Lang, Lawyer } from '@/lib/types';
+import type { Lawyer } from '@/lib/types';
 import { T } from '@/lib/translations';
+import { useLang } from '@/lib/lang-context';
 
 const CITIES = [
   'Lahore', 'Karachi', 'Islamabad', 'Rawalpindi',
@@ -13,27 +14,27 @@ const SPECS = [
   'Corporate Law', "Women's Rights", 'Cybercrime',
 ];
 
-function LawyerCard({ l }: { l: Lawyer }) {
+function LawyerCard({ l, whatsappLabel }: { l: Lawyer; whatsappLabel: string }) {
   const waNumber = l.phone.replace(/-/g, '').replace(/^0/, '92');
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl p-3.5 flex items-start gap-3">
-      <div className="w-11 h-11 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-lg font-bold flex-shrink-0">
+    <div className="bg-white border-2 border-stone-200 rounded-xl p-3.5 flex items-start gap-3">
+      <div className="w-11 h-11 rounded-full bg-brand/10 text-brand flex items-center justify-center text-lg font-bold flex-shrink-0">
         {l.avatar}
       </div>
-      <div className="flex-1">
-        <div className="text-sm font-bold text-gray-800">{l.name}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-bold text-stone-800">{l.name}</div>
         <span className="inline-block bg-blue-50 text-blue-700 text-[11px] font-semibold px-1.5 py-0.5 rounded my-0.5">
           {l.spec}
         </span>
-        <div className="text-xs text-gray-500 mt-0.5">
-          <span className="mr-2.5">📍 {l.city}</span>
-          <span className="mr-2.5">⚖️ {l.court}</span>
+        <div className="text-xs text-stone-500 mt-0.5">
+          <span className="me-2.5">📍 {l.city}</span>
+          <span className="me-2.5">⚖️ {l.court}</span>
           <span>🕐 {l.exp}</span>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-2">
           <a
             href={`tel:${l.phone}`}
-            className="bg-green-800 text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:bg-green-700 transition-colors min-h-[36px] flex items-center"
+            className="bg-brand text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:bg-brand/90 transition-colors min-h-[36px] flex items-center"
           >
             📞 {l.phone}
           </a>
@@ -43,7 +44,7 @@ function LawyerCard({ l }: { l: Lawyer }) {
             rel="noreferrer"
             className="bg-wa-green text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:opacity-90 transition-opacity min-h-[36px] flex items-center"
           >
-            💬 WhatsApp
+            💬 {whatsappLabel}
           </a>
         </div>
       </div>
@@ -51,9 +52,9 @@ function LawyerCard({ l }: { l: Lawyer }) {
   );
 }
 
-export default function LawyersTab({ lang }: { lang: Lang }) {
+export default function LawyersTab() {
+  const { lang, dir } = useLang();
   const t = T[lang];
-  const isUr = lang === 'ur';
   const [city, setCity] = useState('');
   const [spec, setSpec] = useState('');
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
@@ -70,19 +71,17 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
   );
 
   return (
-    <div dir={isUr ? 'rtl' : 'ltr'}>
-      {/* Disclaimer */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-2.5 text-xs text-yellow-800 flex gap-2 items-start mt-3.5">
+    <div dir={dir}>
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-900 flex gap-2 items-start mt-3.5">
         <span>ℹ️</span>
-        <span className={isUr ? 'font-urdu' : ''}>{t.lawyerDisclaimer}</span>
+        <span>{t.lawyerDisclaimer}</span>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-2 flex-wrap my-3.5">
         <select
           value={city}
           onChange={(e) => setCity(e.target.value)}
-          className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:border-green-500 cursor-pointer"
+          className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-stone-200 rounded-lg text-sm text-stone-700 bg-white outline-none focus:border-brand cursor-pointer"
         >
           <option value="">{t.allCities}</option>
           {CITIES.map((c) => (
@@ -92,7 +91,7 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
         <select
           value={spec}
           onChange={(e) => setSpec(e.target.value)}
-          className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:border-green-500 cursor-pointer"
+          className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-stone-200 rounded-lg text-sm text-stone-700 bg-white outline-none focus:border-brand cursor-pointer"
         >
           <option value="">{t.allSpecs}</option>
           {SPECS.map((s) => (
@@ -101,18 +100,18 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
         </select>
       </div>
 
-      {/* Results */}
       <div className="flex flex-col gap-2.5">
         {filtered.length === 0 ? (
-          <div className="text-center text-gray-400 text-sm py-8">
+          <div className="text-center text-stone-400 text-sm py-8">
             🔍 {t.noResults}
           </div>
         ) : (
-          filtered.map((l, i) => <LawyerCard key={i} l={l} />)
+          filtered.map((l, i) => (
+            <LawyerCard key={i} l={l} whatsappLabel={t.whatsappBtn} />
+          ))
         )}
       </div>
 
-      {/* Bar Council note */}
       <div
         className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 mt-3.5 mb-20"
         dangerouslySetInnerHTML={{ __html: t.barNote }}

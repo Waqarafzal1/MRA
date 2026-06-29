@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Registration } from './types';
+import type { LawSection, Registration } from './types';
 
 let _client: SupabaseClient | null = null;
 
@@ -40,5 +40,18 @@ export function rowToRegistration(row: Record<string, unknown>): Registration {
     submittedAt: row.submitted_at as string,
     approvedAt: (row.approved_at as string | null) ?? undefined,
     rejectedAt: (row.rejected_at as string | null) ?? undefined,
+  };
+}
+
+export function rowToLawSection(row: Record<string, unknown>): LawSection {
+  return {
+    id: row.id as string,
+    lawName: row.law_name as string,
+    sectionRef: row.section_ref as string,
+    heading: (row.heading as string) ?? '',
+    body: row.body as string,
+    source: (row.source as string) ?? '',
+    sourceUrl: (row.source_url as string) ?? '',
+    amendedUpTo: (row.amended_up_to as string) ?? '',
   };
 }

@@ -8,16 +8,7 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Helper: redirect unauthenticated users away from protected routes.
-  function redirectToLogin() {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
-  }
-
-  // If env vars are missing, protect routes conservatively.
   if (!supabaseUrl || !supabaseAnonKey) {
-    if (pathname === '/') return redirectToLogin();
     return NextResponse.next({ request });
   }
 
@@ -30,8 +21,6 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        // IMPORTANT: setAll must reassign supabaseResponse so refreshed session
-        // cookies propagate to the browser. Do not move this logic.
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
@@ -42,19 +31,13 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    // IMPORTANT: do NOT add logic between createServerClient and getUser().
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // getUser() failed (network error, unexpected key format, etc.).
-    // Default to unauthenticated — the login page handles the retry.
     user = null;
   }
 
-  // Main app requires login.
-  if (pathname === '/' && !user) return redirectToLogin();
-
-  // Bounce authenticated users away from auth pages.
+  // Optional login: home and search are public. Bounce signed-in users off legacy auth pages.
   if ((pathname === '/login' || pathname === '/signup') && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/';

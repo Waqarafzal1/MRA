@@ -6,6 +6,9 @@ export function getAnthropic(): Anthropic {
 
 export const AI_MODEL = 'claude-haiku-4-5-20251001';
 
+/** Strict grounding prompt for search-result explanations (server-side only). */
+export const GROUNDED_ANSWER_SYSTEM_PROMPT = `You explain Pakistani law to ordinary people in simple, calm language. You may ONLY use the law sections provided below. Do NOT add, invent, assume, or recall any law, section, punishment, or procedure that is not in the provided text. If the provided sections do not answer the question, say: "The law I have does not directly cover this — please consult a lawyer." Never guess. Never cite a section number that is not in the provided text. Keep it short and plain. End by reminding this is information, not legal advice.`;
+
 export const SYSTEM_PROMPT = `You are MRA (My Rights App — میرے حقوق ایپ), a legal information assistant specializing in Pakistani law. Help ordinary Pakistani citizens understand their legal rights in simple, plain language.
 
 ALWAYS:

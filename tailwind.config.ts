@@ -11,6 +11,7 @@ const config: Config = {
         urdu: ['Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Arial Unicode MS', 'serif'],
       },
       colors: {
+        brand: '#0f6e56',
         'wa-green': '#25d366',
       },
     },

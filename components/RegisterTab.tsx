@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import type { Lang, Tab } from '@/lib/types';
+import type { Tab } from '@/lib/types';
+import { T } from '@/lib/translations';
+import { useLang } from '@/lib/lang-context';
 
 const BAR_COUNCILS = [
   'Punjab Bar Council', 'Sindh Bar Council', 'KP Bar Council',
@@ -20,14 +22,14 @@ const SPECS = [
 const LANGS = ['Urdu', 'English', 'Punjabi', 'Sindhi', 'Pashto', 'Balochi'];
 
 interface Props {
-  lang: Lang;
   onTabChange: (t: Tab) => void;
 }
 
 type Step = 'form' | 'otp' | 'success';
 
-export default function RegisterTab({ lang, onTabChange }: Props) {
-  const isUr = lang === 'ur';
+export default function RegisterTab({ onTabChange }: Props) {
+  const { lang, dir, isUr } = useLang();
+  const t = T[lang];
   const [step, setStep] = useState<Step>('form');
   const [regId, setRegId] = useState('');
   const [otpEmail, setOtpEmail] = useState('');
@@ -35,7 +37,6 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
   const [otpMsg, setOtpMsg] = useState<{ text: string; type: 'error' | 'success' } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form fields
   const [fullName, setFullName] = useState('');
   const [cnic, setCnic] = useState('');
   const [phone, setPhone] = useState('');
@@ -51,25 +52,34 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
   const [agreed, setAgreed] = useState(false);
   const [otpValue, setOtpValue] = useState('');
 
+  const expOptions = [
+    { value: '1', label: t.expLt1 },
+    { value: '2', label: t.exp1_2 },
+    { value: '5', label: t.exp3_5 },
+    { value: '8', label: t.exp6_10 },
+    { value: '15', label: t.exp11_20 },
+    { value: '25', label: t.exp20plus },
+  ];
+
   function toggleSpec(s: string) {
-    setSpecs((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+    setSpecs((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   }
   function toggleLang(l: string) {
-    setSelectedLangs((prev) => prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]);
+    setSelectedLangs((prev) => (prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]));
   }
 
   async function submitRegistration() {
     setFormMsg(null);
-    if (!fullName) return setFormMsg({ text: 'Please enter your full name.', type: 'error' });
-    if (!cnic || !/^\d{13}$/.test(cnic.replace(/-/g, ''))) return setFormMsg({ text: 'CNIC must be exactly 13 digits (no dashes).', type: 'error' });
-    if (!licenseNumber) return setFormMsg({ text: 'Please enter your Bar Council license number.', type: 'error' });
-    if (!barCouncil) return setFormMsg({ text: 'Please select your Bar Council.', type: 'error' });
-    if (!city) return setFormMsg({ text: 'Please select your city.', type: 'error' });
-    if (!experience) return setFormMsg({ text: 'Please select your years of experience.', type: 'error' });
-    if (!phone) return setFormMsg({ text: 'Please enter your WhatsApp / mobile number.', type: 'error' });
-    if (!email || !email.includes('@')) return setFormMsg({ text: 'Please enter a valid email address.', type: 'error' });
-    if (specs.length === 0) return setFormMsg({ text: 'Please select at least one area of specialization.', type: 'error' });
-    if (!agreed) return setFormMsg({ text: 'Please agree to the terms before submitting.', type: 'error' });
+    if (!fullName) return setFormMsg({ text: lang === 'ur' ? 'مکمل نام درج کریں۔' : 'Please enter your full name.', type: 'error' });
+    if (!cnic || !/^\d{13}$/.test(cnic.replace(/-/g, ''))) return setFormMsg({ text: lang === 'ur' ? 'CNIC بالکل 13 ہندسے ہونا چاہیے۔' : 'CNIC must be exactly 13 digits (no dashes).', type: 'error' });
+    if (!licenseNumber) return setFormMsg({ text: lang === 'ur' ? 'بار کونسل لائسنس نمبر درج کریں۔' : 'Please enter your Bar Council license number.', type: 'error' });
+    if (!barCouncil) return setFormMsg({ text: lang === 'ur' ? 'بار کونسل منتخب کریں۔' : 'Please select your Bar Council.', type: 'error' });
+    if (!city) return setFormMsg({ text: lang === 'ur' ? 'شہر منتخب کریں۔' : 'Please select your city.', type: 'error' });
+    if (!experience) return setFormMsg({ text: lang === 'ur' ? 'تجربے کے سال منتخب کریں۔' : 'Please select your years of experience.', type: 'error' });
+    if (!phone) return setFormMsg({ text: lang === 'ur' ? 'واٹس ایپ / موبائل نمبر درج کریں۔' : 'Please enter your WhatsApp / mobile number.', type: 'error' });
+    if (!email || !email.includes('@')) return setFormMsg({ text: lang === 'ur' ? 'درست ای میل درج کریں۔' : 'Please enter a valid email address.', type: 'error' });
+    if (specs.length === 0) return setFormMsg({ text: lang === 'ur' ? 'کم از کم ایک تخصص منتخب کریں۔' : 'Please select at least one area of specialization.', type: 'error' });
+    if (!agreed) return setFormMsg({ text: lang === 'ur' ? 'جمع کرانے سے پہلے شرائط سے اتفاق کریں۔' : 'Please agree to the terms before submitting.', type: 'error' });
 
     setSubmitting(true);
     try {
@@ -84,14 +94,14 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setFormMsg({ text: data.error || 'Submission failed. Please try again.', type: 'error' });
+        setFormMsg({ text: data.error || (lang === 'ur' ? 'جمع کرانا ناکام۔ دوبارہ کوشش کریں۔' : 'Submission failed. Please try again.'), type: 'error' });
         return;
       }
       setRegId(data.registrationId);
       setOtpEmail(email);
       setStep('otp');
     } catch {
-      setFormMsg({ text: 'Network error. Please check your connection and try again.', type: 'error' });
+      setFormMsg({ text: lang === 'ur' ? 'نیٹ ورک خرابی۔ دوبارہ کوشش کریں۔' : 'Network error. Please check your connection and try again.', type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -100,7 +110,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
   async function verifyOTP() {
     setOtpMsg(null);
     if (!otpValue || otpValue.length !== 6) {
-      return setOtpMsg({ text: 'Please enter the 6-digit OTP from your email.', type: 'error' });
+      return setOtpMsg({ text: lang === 'ur' ? 'ای میل سے 6 ہندسوں کا OTP درج کریں۔' : 'Please enter the 6-digit OTP from your email.', type: 'error' });
     }
     try {
       const res = await fetch('/api/register/verify', {
@@ -110,11 +120,11 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        return setOtpMsg({ text: data.error || 'Verification failed.', type: 'error' });
+        return setOtpMsg({ text: data.error || (lang === 'ur' ? 'تصدیق ناکام۔' : 'Verification failed.'), type: 'error' });
       }
       setStep('success');
     } catch {
-      setOtpMsg({ text: 'Network error. Please try again.', type: 'error' });
+      setOtpMsg({ text: lang === 'ur' ? 'نیٹ ورک خرابی۔ دوبارہ کوشش کریں۔' : 'Network error. Please try again.', type: 'error' });
     }
   }
 
@@ -123,16 +133,16 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
 
   if (step === 'otp') {
     return (
-      <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 mt-3.5">
+      <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 mt-3.5" dir={dir}>
         <div className="text-center py-5">
           <div className="text-5xl mb-3">📧</div>
-          <h3 className="text-green-800 text-base font-bold mb-2">Check Your Email</h3>
+          <h3 className="text-green-800 text-base font-bold mb-2">{t.checkEmail}</h3>
           <p className="text-sm text-gray-600 mb-4">
-            We sent a 6-digit OTP to <strong>{otpEmail}</strong>.<br />
-            Enter it below to verify your email and submit your registration.
+            {t.otpSentPrefix} <strong dir="ltr">{otpEmail}</strong>.<br />
+            {t.otpSentSuffix}
           </p>
           {otpMsg && (
-            <div className={`text-left px-3.5 py-2.5 rounded-lg text-sm mb-3 border ${otpMsg.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-100 text-green-800 border-green-200'}`}>
+            <div className={`text-start px-3.5 py-2.5 rounded-lg text-sm mb-3 border ${otpMsg.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-100 text-green-800 border-green-200'}`}>
               {otpMsg.text}
             </div>
           )}
@@ -143,6 +153,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
             onKeyDown={(e) => e.key === 'Enter' && verifyOTP()}
             placeholder="000000"
             maxLength={6}
+            dir="ltr"
             className="w-48 text-center text-3xl font-bold tracking-[10px] px-3 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-green-500 font-mono"
           />
           <div className="mt-4">
@@ -150,14 +161,14 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
               onClick={verifyOTP}
               className="bg-green-800 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-green-700 transition-colors"
             >
-              Verify OTP →
+              {t.verifyOtp}
             </button>
           </div>
           <button
             onClick={() => setStep('form')}
             className="mt-3 bg-transparent border-none text-gray-400 text-xs cursor-pointer hover:text-gray-600"
           >
-            ← Go back and change email
+            {t.goBackEmail}
           </button>
         </div>
       </div>
@@ -166,20 +177,16 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
 
   if (step === 'success') {
     return (
-      <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 mt-3.5">
+      <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 mt-3.5" dir={dir}>
         <div className="text-center py-8">
           <div className="text-5xl mb-3">✅</div>
-          <h3 className="text-green-800 text-base font-bold mb-2">Registration Submitted!</h3>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Your email has been verified and your registration is now under review.<br /><br />
-            Our team will verify your Bar Council credentials within{' '}
-            <strong>2–3 business days</strong>. You will receive an email when your profile goes live on MRA.
-          </p>
+          <h3 className="text-green-800 text-base font-bold mb-2">{t.registrationSubmitted}</h3>
+          <p className="text-sm text-gray-600 leading-relaxed">{t.registrationSuccessBody}</p>
           <button
             onClick={() => onTabChange('lawyers')}
             className="mt-6 bg-green-800 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-green-700 transition-colors"
           >
-            View Lawyer Directory →
+            {t.viewDirectory}
           </button>
         </div>
       </div>
@@ -187,12 +194,9 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
   }
 
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 mt-3.5 mb-4" dir={isUr ? 'rtl' : 'ltr'}>
-      <h3 className="text-green-800 text-sm font-bold mb-1">📝 Register as a Lawyer on MRA</h3>
-      <p className="text-xs text-gray-600 mb-4">
-        Your profile will be verified and approved before going live. Fields marked{' '}
-        <span className="text-red-600">*</span> are required.
-      </p>
+    <div className={`bg-white border-2 border-gray-200 rounded-2xl p-5 mt-3.5 mb-4 ${isUr ? 'font-urdu' : ''}`} dir={dir}>
+      <h3 className="text-green-800 text-sm font-bold mb-1">📝 {t.registerTitle}</h3>
+      <p className="text-xs text-gray-600 mb-4">{t.registerIntro}</p>
 
       {formMsg && (
         <div className={`px-3.5 py-2.5 rounded-lg text-sm mb-3 border ${formMsg.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-100 text-green-800 border-green-200'}`}>
@@ -201,84 +205,80 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Personal */}
         <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
-          Personal Information
+          {t.personalInfo}
         </div>
 
         <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
-          <label className={labelCls}>Full Name <span className="text-red-600">*</span></label>
+          <label className={labelCls}>{t.fullName} <span className="text-red-600">{t.required}</span></label>
           <input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Muhammad Bilal Khan" maxLength={100} />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>CNIC Number <span className="text-red-600">*</span></label>
-          <input className={inputCls} value={cnic} onChange={(e) => setCnic(e.target.value)} placeholder="3520212345678" maxLength={15} />
-          <span className="text-[11px] text-gray-400">13 digits, no dashes</span>
+          <label className={labelCls}>{t.cnic} <span className="text-red-600">{t.required}</span></label>
+          <input className={inputCls} value={cnic} onChange={(e) => setCnic(e.target.value)} placeholder="3520212345678" maxLength={15} dir="ltr" />
+          <span className="text-[11px] text-gray-400">{t.cnicHint}</span>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>WhatsApp / Mobile <span className="text-red-600">*</span></label>
-          <input className={inputCls} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="03001234567" />
+          <label className={labelCls}>{t.whatsappMobile} <span className="text-red-600">{t.required}</span></label>
+          <input className={inputCls} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="03001234567" dir="ltr" />
         </div>
 
         <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
-          <label className={labelCls}>Email Address <span className="text-red-600">*</span></label>
-          <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="youremail@gmail.com" />
-          <span className="text-[11px] text-gray-400">An OTP will be sent here to verify your email</span>
+          <label className={labelCls}>{t.emailAddress} <span className="text-red-600">{t.required}</span></label>
+          <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="youremail@gmail.com" dir="ltr" />
+          <span className="text-[11px] text-gray-400">{t.emailOtpHint}</span>
         </div>
 
         <hr className="col-span-1 sm:col-span-2 border-gray-200" />
         <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
-          Professional Credentials
+          {t.professionalCredentials}
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>Bar Council License No. <span className="text-red-600">*</span></label>
+          <label className={labelCls}>{t.licenseNo} <span className="text-red-600">{t.required}</span></label>
           <input className={inputCls} value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="e.g. PBC-2019-12345" />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>Issuing Bar Council <span className="text-red-600">*</span></label>
+          <label className={labelCls}>{t.issuingBarCouncil} <span className="text-red-600">{t.required}</span></label>
           <select className={inputCls} value={barCouncil} onChange={(e) => setBarCouncil(e.target.value)}>
-            <option value="">Select Bar Council</option>
+            <option value="">{t.selectBarCouncil}</option>
             {BAR_COUNCILS.map((b) => <option key={b}>{b}</option>)}
           </select>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>City <span className="text-red-600">*</span></label>
+          <label className={labelCls}>{t.city} <span className="text-red-600">{t.required}</span></label>
           <select className={inputCls} value={city} onChange={(e) => setCity(e.target.value)}>
-            <option value="">Select City</option>
+            <option value="">{t.selectCity}</option>
             {CITIES.map((c) => <option key={c}>{c}</option>)}
           </select>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>Years of Experience <span className="text-red-600">*</span></label>
+          <label className={labelCls}>{t.yearsExperience} <span className="text-red-600">{t.required}</span></label>
           <select className={inputCls} value={experience} onChange={(e) => setExperience(e.target.value)}>
-            <option value="">Select</option>
-            <option value="1">Less than 1 year</option>
-            <option value="2">1–2 years</option>
-            <option value="5">3–5 years</option>
-            <option value="8">6–10 years</option>
-            <option value="15">11–20 years</option>
-            <option value="25">20+ years</option>
+            <option value="">{t.select}</option>
+            {expOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </div>
 
         <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
-          <label className={labelCls}>Court(s) Where You Practice</label>
+          <label className={labelCls}>{t.courtsPractice}</label>
           <input className={inputCls} value={court} onChange={(e) => setCourt(e.target.value)} placeholder="e.g. Lahore High Court, Sessions Court Lahore" />
         </div>
 
         <hr className="col-span-1 sm:col-span-2 border-gray-200" />
         <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
-          Specialization
+          {t.specialization}
         </div>
 
         <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
-          <label className={labelCls}>Areas of Practice <span className="text-red-600">*</span></label>
+          <label className={labelCls}>{t.areasOfPractice} <span className="text-red-600">{t.required}</span></label>
           <div className="flex flex-wrap gap-2 mt-1">
             {SPECS.map((s) => (
               <label key={s} className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
@@ -295,7 +295,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
         </div>
 
         <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
-          <label className={labelCls}>Languages</label>
+          <label className={labelCls}>{t.languages}</label>
           <div className="flex flex-wrap gap-2 mt-1">
             {LANGS.map((l) => (
               <label key={l} className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
@@ -313,16 +313,16 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
 
         <hr className="col-span-1 sm:col-span-2 border-gray-200" />
         <div className="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">
-          About You
+          {t.aboutYou}
         </div>
 
         <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
-          <label className={labelCls}>Brief Bio / About</label>
+          <label className={labelCls}>{t.briefBio}</label>
           <textarea
             className={`${inputCls} resize-y min-h-[80px]`}
             value={about}
             onChange={(e) => setAbout(e.target.value)}
-            placeholder="Tell citizens about your practice, experience, and how you can help them..."
+            placeholder={t.bioPlaceholder}
           />
         </div>
 
@@ -334,7 +334,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
               onChange={(e) => setAgreed(e.target.checked)}
               className="mt-0.5 w-3.5 h-3.5 accent-green-800 flex-shrink-0"
             />
-            I confirm that the information provided is accurate and I am a registered lawyer with the stated Bar Council. I agree to MRA&apos;s terms of service.
+            {t.agreeTerms}
           </label>
         </div>
       </div>
@@ -344,7 +344,7 @@ export default function RegisterTab({ lang, onTabChange }: Props) {
         disabled={submitting}
         className="w-full bg-green-800 text-white py-3.5 rounded-xl text-sm font-bold mt-4 hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        {submitting ? 'Sending OTP...' : 'Submit Registration & Verify Email →'}
+        {submitting ? t.sendingOtp : t.submitRegister}
       </button>
     </div>
   );

@@ -50,3 +50,14 @@ export interface ChatMessage {
   text: string;
   streaming?: boolean;
 }
+
+export interface LawSection {
+  id: string;
+  lawName: string;
+  sectionRef: string;
+  heading: string;
+  body: string;
+  source: string;
+  sourceUrl: string;
+  amendedUpTo: string;
+}

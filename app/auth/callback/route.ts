@@ -21,19 +21,19 @@ export async function GET(request: NextRequest) {
       error_code: searchParams.get('error_code'),
       error_description: searchParams.get('error_description'),
     });
-    return NextResponse.redirect(new URL('/login?error=oauth_error', origin));
+    return NextResponse.redirect(new URL('/?signin=error', origin));
   }
 
   if (!code) {
     console.warn('[auth/callback] No code parameter — URL params:', Object.fromEntries(searchParams));
-    return NextResponse.redirect(new URL('/login?error=oauth_error', origin));
+    return NextResponse.redirect(new URL('/?signin=error', origin));
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error('[auth/callback] Missing env vars: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
-    return NextResponse.redirect(new URL('/login?error=oauth_error', origin));
+    return NextResponse.redirect(new URL('/?signin=error', origin));
   }
 
   const cookieStore = cookies();
@@ -61,5 +61,5 @@ export async function GET(request: NextRequest) {
     name: error.name,
   });
 
-  return NextResponse.redirect(new URL('/login?error=oauth_error', origin));
+  return NextResponse.redirect(new URL('/?signin=error', origin));
 }

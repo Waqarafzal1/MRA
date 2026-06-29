@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { Providers } from '@/components/Providers';
+import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'MRA — My Rights App | Pakistan',
@@ -16,7 +18,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="min-h-screen flex flex-col bg-stone-50">
+        <Providers>
+          <div className="flex-1 flex flex-col">{children}</div>
+          <Footer />
+        </Providers>
+      </body>
     </html>
   );
 }
