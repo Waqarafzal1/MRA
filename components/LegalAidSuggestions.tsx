@@ -113,10 +113,6 @@ export default function LegalAidSuggestions({
         const nextHelpline = data.helpline ?? null;
         setMatched(nextMatched);
         setHelpline(nextHelpline);
-
-        // #region agent log
-        fetch('http://127.0.0.1:7367/ingest/c5e61894-d46a-400f-bd9c-76e07d041967',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b10a3d'},body:JSON.stringify({sessionId:'b10a3d',location:'LegalAidSuggestions.tsx:load',message:'client suggestions loaded',data:{matchedCount:nextMatched.length,hasHelpline:!!nextHelpline,questionPreview:question.slice(0,60)},timestamp:Date.now(),hypothesisId:'C',runId:'part2'})}).catch(()=>{});
-        // #endregion
       } catch {
         if (!cancelled) {
           setMatched([]);

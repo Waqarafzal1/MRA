@@ -1,13 +1,15 @@
 import { supabaseServer, rowToLawSection } from '@/lib/supabase';
+import {
+  expandSearchQuery,
+  extractSearchTerms,
+  getSectionBoosts,
+  type SectionBoost,
+} from '@/lib/searchSynonyms';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const STOP_WORDS = new Set([
-  'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-  'what', 'when', 'where', 'who', 'why', 'how', 'if', 'i', 'me', 'my',
-  'do', 'does', 'did', 'can', 'will', 'would', 'should', 'happens', 'happen',
-]);
+const MAX_RESULTS = 10;
 
 function termMatches(hay: string, term: string): boolean {
   if (hay.includes(term)) return true;
@@ -16,35 +18,106 @@ function termMatches(hay: string, term: string): boolean {
   return false;
 }
 
-function orderRpcResults(rows: Record<string, unknown>[], query: string) {
-  const terms = query
-    .toLowerCase()
-    .split(/\s+/)
-    .map((t) => t.replace(/[^a-z0-9-]/g, ''))
-    .filter((t) => t.length > 2 && !STOP_WORDS.has(t));
+function searchableText(row: Record<string, unknown>): string {
+  const bodyClean = String(row.body_clean ?? '');
+  const body = String(row.body ?? '');
+  return `${row.section_ref ?? ''} ${row.heading ?? ''} ${bodyClean || body}`.toLowerCase();
+}
 
-  const refHeading = (row: Record<string, unknown>) =>
-    `${row.section_ref ?? ''} ${row.heading ?? ''}`.toLowerCase();
+function sectionBoostScore(row: Record<string, unknown>, boosts: SectionBoost[]): number {
+  return boosts.reduce((sum, b) => {
+    if (row.law_name === b.lawName && row.section_ref === b.sectionRef) {
+      return sum + b.boost;
+    }
+    return sum;
+  }, 0);
+}
 
-  const termHits = (row: Record<string, unknown>) =>
-    terms.reduce((n, term) => n + (termMatches(refHeading(row), term) ? 1 : 0), 0);
+function scoreRow(
+  row: Record<string, unknown>,
+  terms: string[],
+  boosts: SectionBoost[],
+): number {
+  const hay = searchableText(row);
+  let hits = 0;
+  for (const term of terms) {
+    if (termMatches(hay, term)) hits += 1;
+  }
 
-  const maxHits = rows.reduce((max, row) => Math.max(max, termHits(row)), 0);
-  if (maxHits === 0) return rows;
+  const refHeading = `${row.section_ref ?? ''} ${row.heading ?? ''}`.toLowerCase();
+  let refHeadingHits = 0;
+  for (const term of terms) {
+    if (termMatches(refHeading, term)) refHeadingHits += 1;
+  }
+
+  const rpcRank = typeof row.rank === 'number' ? row.rank : Number(row.rank ?? 0);
+  return hits * 2 + refHeadingHits + rpcRank * 0.25 + sectionBoostScore(row, boosts);
+}
+
+function orderRpcResults(
+  rows: Record<string, unknown>[],
+  query: string,
+  expandedQuery: string,
+): Record<string, unknown>[] {
+  const terms = [
+    ...new Set([
+      ...extractSearchTerms(query),
+      ...extractSearchTerms(expandedQuery),
+    ]),
+  ];
+  const boosts = getSectionBoosts(query);
+
+  if (terms.length === 0 && boosts.length === 0) return rows;
+
+  const maxScore = rows.reduce(
+    (max, row) => Math.max(max, scoreRow(row, terms, boosts)),
+    0,
+  );
+  if (maxScore === 0) return rows;
 
   return [...rows].sort((a, b) => {
-    const hitDiff = termHits(b) - termHits(a);
-    if (hitDiff !== 0) return hitDiff;
+    const scoreDiff = scoreRow(b, terms, boosts) - scoreRow(a, terms, boosts);
+    if (scoreDiff !== 0) return scoreDiff;
 
-    const allMatch = (row: Record<string, unknown>) =>
-      terms.every((term) => termMatches(refHeading(row), term));
-    const allDiff = Number(allMatch(b)) - Number(allMatch(a));
-    if (allDiff !== 0) return allDiff;
+    const rpcDiff = Number(b.rank ?? 0) - Number(a.rank ?? 0);
+    if (rpcDiff !== 0) return rpcDiff;
 
-    const headingLen = (row: Record<string, unknown>) =>
-      String(row.heading ?? '').length;
-    return headingLen(a) - headingLen(b);
+    return String(a.heading ?? '').length - String(b.heading ?? '').length;
   });
+}
+
+async function fetchMissingBoostSections(
+  rows: Record<string, unknown>[],
+  boosts: SectionBoost[],
+): Promise<Record<string, unknown>[]> {
+  if (boosts.length === 0) return rows;
+
+  const missing = boosts.filter(
+    (b) =>
+      !rows.some(
+        (r) => r.law_name === b.lawName && r.section_ref === b.sectionRef,
+      ),
+  );
+  if (missing.length === 0) return rows;
+
+  const fetched: Record<string, unknown>[] = [];
+  for (const b of missing) {
+    const { data, error } = await supabaseServer()
+      .from('law_sections')
+      .select('*')
+      .eq('law_name', b.lawName)
+      .eq('section_ref', b.sectionRef)
+      .limit(1);
+    if (error) {
+      console.error('[search GET] boost section fetch:', error.message);
+      continue;
+    }
+    if (data?.[0]) {
+      fetched.push({ ...data[0], rank: 0 });
+    }
+  }
+
+  return [...rows, ...fetched];
 }
 
 export async function GET(request: Request) {
@@ -54,8 +127,11 @@ export async function GET(request: Request) {
     return Response.json({ error: 'q is required' }, { status: 400 });
   }
 
+  const expanded = expandSearchQuery(q);
+  const boosts = getSectionBoosts(q);
+
   const { data, error } = await supabaseServer().rpc('search_law', {
-    query_text: q,
+    query_text: expanded,
   });
 
   if (error) {
@@ -69,7 +145,10 @@ export async function GET(request: Request) {
     );
   }
 
-  const rows = orderRpcResults((data ?? []) as Record<string, unknown>[], q);
+  let rows = (data ?? []) as Record<string, unknown>[];
+  rows = await fetchMissingBoostSections(rows, boosts);
+  rows = orderRpcResults(rows, q, expanded).slice(0, MAX_RESULTS);
+
   const results = rows.map((row) => rowToLawSection(row));
   return Response.json({ query: q, results });
 }

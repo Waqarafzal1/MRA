@@ -133,9 +133,6 @@ export default function LegalAidPage() {
       setItems(data.items ?? []);
       setUsingFallback(data.source === 'fallback');
       if (data.error && !data.items?.length) setError(t.legalAidLoadError);
-      // #region agent log
-      fetch('http://127.0.0.1:7367/ingest/c5e61894-d46a-400f-bd9c-76e07d041967',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b10a3d'},body:JSON.stringify({sessionId:'b10a3d',location:'legal-aid/page.tsx:fetchItems',message:'client received legal aid data',data:{itemCount:data.items?.length??0,source:data.source??null,helpsWith,coverage},timestamp:Date.now(),hypothesisId:'C',runId:'post-fix'})}).catch(()=>{});
-      // #endregion
     } catch {
       setItems([]);
       setError(t.legalAidLoadError);
