@@ -159,3 +159,30 @@ CREATE TABLE IF NOT EXISTS legal_news (
 CREATE INDEX IF NOT EXISTS idx_legal_news_status_published
   ON legal_news (status, published_date DESC);
 
+
+-- =============================================================================
+-- TABLE: legal_aid
+-- Free legal aid directory (Part 1 — is_verified gates live display)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS legal_aid (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name           TEXT        NOT NULL UNIQUE,
+  org_type       TEXT        NOT NULL
+                             CHECK (org_type IN ('government', 'bar_committee', 'ngo', 'helpline')),
+  helps_with     TEXT[]      NOT NULL DEFAULT '{}',
+  who_qualifies  TEXT        NOT NULL,
+  coverage       TEXT        NOT NULL,
+  phone          TEXT,
+  address        TEXT,
+  website        TEXT,
+  is_free        BOOLEAN     NOT NULL DEFAULT true,
+  is_verified    BOOLEAN     NOT NULL DEFAULT false,
+  source_url     TEXT        NOT NULL,
+  last_verified  DATE,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_aid_verified ON legal_aid (is_verified);
+CREATE INDEX IF NOT EXISTS idx_legal_aid_coverage ON legal_aid (coverage);
+CREATE INDEX IF NOT EXISTS idx_legal_aid_helps_with ON legal_aid USING GIN (helps_with);
+

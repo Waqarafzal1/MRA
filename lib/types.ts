@@ -74,3 +74,21 @@ export interface LegalNews {
   status: LegalNewsStatus;
   createdAt: string;
 }
+
+export type LegalAidOrgType = 'government' | 'bar_committee' | 'ngo' | 'helpline';
+
+export interface LegalAid {
+  id: string;
+  name: string;
+  orgType: LegalAidOrgType;
+  helpsWith: string[];
+  whoQualifies: string;
+  coverage: string;
+  phone: string | null;
+  address: string | null;
+  website: string | null;
+  isFree: boolean;
+  isVerified: boolean;
+  sourceUrl: string;
+  lastVerified: string | null;
+}

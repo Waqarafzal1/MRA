@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import FreeQuestionsCounter from '@/components/FreeQuestionsCounter';
+import LegalAidSuggestions from '@/components/LegalAidSuggestions';
 import { useAuth } from '@/lib/auth-context';
 import type { LawSection } from '@/lib/types';
 import { pickSectionsForAnswer, type TwoLayerAnswer } from '@/lib/grounded-answer';
@@ -52,8 +53,9 @@ function SearchResults() {
   const signedIn = !!userEmail;
   const [results, setResults] = useState<LawSection[]>([]);
   const [answer, setAnswer] = useState<TwoLayerAnswer | null>(null);
-  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(!!q);
   const [loadingAnswer, setLoadingAnswer] = useState(false);
+  const [searchDone, setSearchDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answerError, setAnswerError] = useState<string | null>(null);
   const [aiGated, setAiGated] = useState(false);
@@ -64,6 +66,7 @@ function SearchResults() {
       setAnswer(null);
       setError(null);
       setAnswerError(null);
+      setSearchDone(false);
       return;
     }
 
@@ -77,6 +80,7 @@ function SearchResults() {
       setAnswer(null);
       setResults([]);
       setAiGated(false);
+      setSearchDone(false);
 
       try {
         const searchRes = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
@@ -94,6 +98,7 @@ function SearchResults() {
 
         setResults(sections);
         setLoadingSearch(false);
+        setSearchDone(true);
 
         if (sections.length === 0) return;
 
@@ -138,6 +143,7 @@ function SearchResults() {
         if (!cancelled) {
           setLoadingSearch(false);
           setLoadingAnswer(false);
+          setSearchDone(true);
         }
       }
     }
@@ -172,7 +178,7 @@ function SearchResults() {
     );
   }
 
-  if (results.length === 0) {
+  if (results.length === 0 && searchDone) {
     return (
       <p className="text-stone-600 text-sm text-center py-8 leading-relaxed" dir={dir}>
         {t.noLawFound}
@@ -185,15 +191,15 @@ function SearchResults() {
   return (
     <div className="flex flex-col gap-4 pb-8" dir={dir}>
       {/* Layer 1 — verified database law (green) */}
-      <section className="bg-brand/5 border-2 border-brand/30 rounded-xl p-4">
+      <section className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <span
-            className="flex-shrink-0 w-6 h-6 rounded-full bg-brand/15 text-brand flex items-center justify-center text-sm font-bold"
+            className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-sm font-bold"
             aria-hidden="true"
           >
             ✓
           </span>
-          <p className="text-[11px] font-bold text-brand uppercase tracking-wider">
+          <p className="text-[11px] font-bold text-green-800 uppercase tracking-wider">
             {t.verifiedLawTitle}
           </p>
         </div>
@@ -240,23 +246,35 @@ function SearchResults() {
         </section>
       )}
 
-      {/* AI reasoning footer — always when answer layers shown or loading */}
-      {!aiGated && !answerError && (loadingAnswer || answer) && (
-        <p className="text-[11px] text-stone-500 text-center leading-relaxed px-2">
-          {t.aiReasoningFooter}
-        </p>
-      )}
+      <LegalAidSuggestions
+        question={q}
+        sections={displayedSections}
+        ready={searchDone && !loadingAnswer && results.length > 0}
+      />
+
+      {/* AI reasoning footer — always on results with search hits */}
+      <p className="text-[11px] text-stone-500 text-center leading-relaxed px-2">
+        {t.aiReasoningFooter}
+      </p>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
         {t.searchDisclaimer}
       </div>
 
-      <Link
-        href="/?tab=lawyers"
-        className="block text-center bg-brand text-white text-sm font-semibold py-3 rounded-xl hover:bg-brand/90 transition-colors"
-      >
-        {t.findLawyer}
-      </Link>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <Link
+          href="/legal-aid"
+          className="block text-center bg-brand/10 text-brand border-2 border-brand/30 text-sm font-semibold py-3 rounded-xl hover:bg-brand/15 transition-colors"
+        >
+          {t.legalAidLink}
+        </Link>
+        <Link
+          href="/?tab=lawyers"
+          className="block text-center bg-brand text-white text-sm font-semibold py-3 rounded-xl hover:bg-brand/90 transition-colors"
+        >
+          {t.findLawyer}
+        </Link>
+      </div>
     </div>
   );
 }

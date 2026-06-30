@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import FreeQuestionsCounter from '@/components/FreeQuestionsCounter';
 import LegalNewsStrip from '@/components/LegalNewsStrip';
 import type { Tab } from '@/lib/types';
@@ -161,6 +162,18 @@ export default function HomeTab({
           </button>
         ))}
       </div>
+
+      <Link
+        href="/legal-aid"
+        className="w-full bg-brand/5 border-2 border-brand/20 rounded-xl p-4 flex items-center gap-3 hover:bg-brand/10 transition-colors mb-3 block"
+      >
+        <span className="text-2xl">🤝</span>
+        <div className="flex-1 text-start">
+          <div className="font-bold text-brand text-sm">{t.legalAidLink}</div>
+          <div className="text-brand/80 text-xs mt-0.5">{t.legalAidLinkSub}</div>
+        </div>
+        <span className="text-brand text-lg flex-shrink-0">{isUr ? '←' : '→'}</span>
+      </Link>
 
       <button
         onClick={() => onTabChange('lawyers')}

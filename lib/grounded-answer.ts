@@ -72,7 +72,26 @@ export function parseTwoLayerAnswer(raw: string): TwoLayerAnswer | null {
   return null;
 }
 
-/** Reject section/article refs in general guidance that are not in DB sections. */
+/** Remove Section/Article refs in general guidance that are not in the grounded DB sections. */
+export function stripUnknownSectionRefsFromGuidance(
+  guidance: string,
+  sections: LawSection[],
+): string {
+  const allowed = allowedSectionRefs(sections);
+  const normalizedAllowed = new Set(
+    [...allowed].map((r) => r.replace(/\s+/g, ' ').trim().toLowerCase()),
+  );
+  return guidance
+    .replace(SECTION_REF_IN_TEXT, (match) => {
+      const ref = match.replace(/\s+/g, ' ').trim().toLowerCase();
+      return normalizedAllowed.has(ref) ? match : '';
+    })
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.;])/g, '$1')
+    .trim();
+}
+
+/** List section/article refs in general guidance that are not in DB sections. */
 export function generalGuidanceCitesUnknownSection(
   guidance: string,
   sections: LawSection[],

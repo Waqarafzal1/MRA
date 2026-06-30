@@ -4,6 +4,7 @@ import {
   generalGuidanceCitesUnknownSection,
   parseTwoLayerAnswer,
   pickSectionsForAnswer,
+  stripUnknownSectionRefsFromGuidance,
 } from '@/lib/grounded-answer';
 import type { LawSection } from '@/lib/types';
 
@@ -90,10 +91,15 @@ export async function POST(request: Request) {
       console.warn('[answer POST] General guidance cited unknown sections:', unknownRefs);
     }
 
+    const generalGuidance = stripUnknownSectionRefsFromGuidance(
+      layers.generalGuidance,
+      grounded,
+    );
+
     return Response.json({
       question: q,
       verifiedLaw: layers.verifiedLaw,
-      generalGuidance: layers.generalGuidance,
+      generalGuidance,
       groundedSectionRefs: grounded.map((s) => s.sectionRef),
     });
   } catch (err) {
