@@ -8,3 +8,5 @@
 npm-debug.log*
 next-env.d.ts
 registrations.json
+.vercel
+.env*

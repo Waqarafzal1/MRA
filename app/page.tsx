@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { ComponentType } from 'react';
+import { IconScale, IconBrandWhatsapp, IconGavel, IconUserPlus } from '@tabler/icons-react';
 import Header from '@/components/Header';
 import AskTab from '@/components/AskTab';
 import WhatsAppTab from '@/components/WhatsAppTab';
@@ -23,11 +25,11 @@ export default function Home() {
     });
   }, []);
 
-  const tabs: { id: Tab; icon: string; label: string }[] = [
-    { id: 'ask',      icon: '⚖️', label: t.tabAsk },
-    { id: 'whatsapp', icon: '💬', label: t.tabWa },
-    { id: 'lawyers',  icon: '👨‍⚖️', label: t.tabLawyers },
-    { id: 'register', icon: '📝', label: t.tabRegister },
+  const tabs: { id: Tab; icon: ComponentType<{ size?: number | string; stroke?: number | string }>; label: string }[] = [
+    { id: 'ask',      icon: IconScale,         label: t.tabAsk },
+    { id: 'whatsapp', icon: IconBrandWhatsapp, label: t.tabWa },
+    { id: 'lawyers',  icon: IconGavel,         label: t.tabLawyers },
+    { id: 'register', icon: IconUserPlus,      label: t.tabRegister },
   ];
 
   return (
@@ -35,22 +37,28 @@ export default function Home() {
       <Header lang={lang} onLangChange={setLang} userEmail={userEmail} />
 
       {/* Tab bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-[57px] z-40">
-        <div className="max-w-[760px] mx-auto flex flex-wrap sm:flex-nowrap">
-          {tabs.map(({ id, icon, label }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`w-1/2 sm:flex-1 sm:w-auto min-h-[44px] py-2 px-2 border-none bg-transparent text-xs font-semibold flex items-center justify-center gap-1 border-b-2 transition-all cursor-pointer ${
-                tab === id
-                  ? 'text-green-800 border-b-green-800'
-                  : 'text-gray-400 border-b-transparent hover:text-gray-600'
-              }`}
-            >
-              <span className="flex-shrink-0">{icon}</span>
-              <span className="truncate">{label}</span>
-            </button>
-          ))}
+      <div className="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-[53px] z-40">
+        <div className="max-w-[760px] mx-auto flex px-2 gap-1">
+          {tabs.map(({ id, icon: Ic, label }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`relative flex-1 min-h-[48px] py-2 px-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors cursor-pointer ${
+                  active ? 'text-brand-700' : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <Ic size={20} stroke={active ? 2 : 1.7} />
+                <span className="truncate max-w-full">{label}</span>
+                <span
+                  className={`absolute bottom-0 h-0.5 rounded-full bg-brand-600 transition-all duration-200 ${
+                    active ? 'w-8 opacity-100' : 'w-0 opacity-0'
+                  }`}
+                />
+              </button>
+            );
+          })}
         </div>
       </div>
 

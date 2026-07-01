@@ -15,11 +15,18 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f9fafb;
-  color: #1f2937;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a; /* slate-900 */
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Soft emerald wash over a cool slate base */
+  background-color: #f8fafc; /* slate-50 */
+  background-image:
+    radial-gradient(1100px 520px at 100% -10%, rgba(16, 185, 129, 0.10), transparent 60%),
+    radial-gradient(900px 480px at -10% 0%, rgba(4, 120, 87, 0.07), transparent 55%);
+  background-attachment: fixed;
 }
 
 /* iOS safe-area padding for fixed bottom bars */
@@ -32,6 +39,72 @@ body {
 
 .font-urdu {
   font-family: var(--font-urdu);
+}
+
+/* ---------------------------------------------------------------------------
+   Reusable presentational primitives — visual only, no component logic.
+   Components opt in by swapping long inline class strings for these.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* Surfaces */
+  .card {
+    @apply bg-white rounded-2xl border border-slate-200/70 shadow-soft;
+  }
+  .card-pop {
+    @apply bg-white rounded-2xl border border-slate-200/70 shadow-pop;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+           transition-all duration-150 select-none focus:outline-none
+           focus-visible:ring-2 focus-visible:ring-brand-600/40 disabled:cursor-not-allowed;
+  }
+  .btn-sm {
+    @apply px-3 py-2 text-xs rounded-lg gap-1.5;
+  }
+  .btn-primary {
+    @apply text-white bg-gradient-to-b from-brand-600 to-brand-700 shadow-brand-glow
+           hover:from-brand-500 hover:to-brand-600 active:from-brand-700 active:to-brand-800
+           disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none;
+  }
+  .btn-secondary {
+    @apply text-slate-700 bg-white border border-slate-200 shadow-soft
+           hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply text-slate-500 bg-transparent hover:text-slate-800 hover:bg-slate-100;
+  }
+  .btn-wa {
+    @apply text-white shadow-soft hover:opacity-90;
+    background-color: #25d366;
+  }
+
+  /* Form fields */
+  .field {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800
+           placeholder:text-slate-400 outline-none transition-all
+           focus:border-brand-600 focus:ring-2 focus:ring-brand-600/25;
+    font-family: inherit;
+  }
+
+  /* Chips & badges */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50
+           px-3 py-1 text-xs font-medium text-brand-700 transition-colors cursor-pointer
+           hover:bg-brand-600 hover:border-brand-600 hover:text-white;
+  }
+  .chip-active {
+    @apply bg-brand-600 border-brand-600 text-white;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  /* Section labels (uppercase, tracked) */
+  .section-label {
+    @apply flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400;
+  }
 }
 
 /* Cursor blink for streaming */

@@ -1,6 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  IconMapPin,
+  IconGavel,
+  IconClock,
+  IconPhone,
+  IconBrandWhatsapp,
+  IconSearch,
+  IconInfoCircle,
+  IconChevronDown,
+} from '@tabler/icons-react';
 import type { Lang, Lawyer } from '@/lib/types';
 import { T } from '@/lib/translations';
 
@@ -16,34 +26,38 @@ const SPECS = [
 function LawyerCard({ l }: { l: Lawyer }) {
   const waNumber = l.phone.replace(/-/g, '').replace(/^0/, '92');
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl p-3.5 flex items-start gap-3">
-      <div className="w-11 h-11 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-lg font-bold flex-shrink-0">
+    <div className="card p-4 flex items-start gap-3.5 transition-shadow hover:shadow-card">
+      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center text-lg font-bold flex-shrink-0 shadow-soft">
         {l.avatar}
       </div>
-      <div className="flex-1">
-        <div className="text-sm font-bold text-gray-800">{l.name}</div>
-        <span className="inline-block bg-blue-50 text-blue-700 text-[11px] font-semibold px-1.5 py-0.5 rounded my-0.5">
-          {l.spec}
-        </span>
-        <div className="text-xs text-gray-500 mt-0.5">
-          <span className="mr-2.5">📍 {l.city}</span>
-          <span className="mr-2.5">⚖️ {l.court}</span>
-          <span>🕐 {l.exp}</span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-bold text-slate-800">{l.name}</div>
+        <span className="badge bg-brand-50 text-brand-700 my-1">{l.spec}</span>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+          <span className="inline-flex items-center gap-1">
+            <IconMapPin size={13} stroke={1.8} className="text-slate-400" /> {l.city}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <IconGavel size={13} stroke={1.8} className="text-slate-400" /> {l.court}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <IconClock size={13} stroke={1.8} className="text-slate-400" /> {l.exp}
+          </span>
         </div>
-        <div className="flex flex-wrap gap-1.5 mt-2">
+        <div className="flex flex-wrap gap-2 mt-3">
           <a
             href={`tel:${l.phone}`}
-            className="bg-green-800 text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:bg-green-700 transition-colors min-h-[36px] flex items-center"
+            className="btn btn-primary btn-sm min-h-[36px]"
           >
-            📞 {l.phone}
+            <IconPhone size={15} stroke={1.9} /> {l.phone}
           </a>
           <a
             href={`https://wa.me/${waNumber}`}
             target="_blank"
             rel="noreferrer"
-            className="bg-wa-green text-white text-xs font-semibold px-3 py-2 rounded-lg no-underline hover:opacity-90 transition-opacity min-h-[36px] flex items-center"
+            className="btn btn-wa btn-sm min-h-[36px]"
           >
-            💬 WhatsApp
+            <IconBrandWhatsapp size={15} stroke={1.9} /> WhatsApp
           </a>
         </div>
       </div>
@@ -72,40 +86,49 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
   return (
     <div dir={isUr ? 'rtl' : 'ltr'}>
       {/* Disclaimer */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-2.5 text-xs text-yellow-800 flex gap-2 items-start mt-3.5">
-        <span>ℹ️</span>
-        <span className={isUr ? 'font-urdu' : ''}>{t.lawyerDisclaimer}</span>
+      <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-800 flex gap-2.5 items-start mt-3.5">
+        <IconInfoCircle size={16} stroke={1.9} className="flex-shrink-0 mt-0.5 text-amber-500" />
+        <span className={`leading-relaxed ${isUr ? 'font-urdu' : ''}`}>{t.lawyerDisclaimer}</span>
       </div>
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap my-3.5">
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:border-green-500 cursor-pointer"
-        >
-          <option value="">{t.allCities}</option>
-          {CITIES.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-        <select
-          value={spec}
-          onChange={(e) => setSpec(e.target.value)}
-          className="flex-1 min-w-[140px] px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:border-green-500 cursor-pointer"
-        >
-          <option value="">{t.allSpecs}</option>
-          {SPECS.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
+        <div className="relative flex-1 min-w-[140px]">
+          <IconMapPin size={16} stroke={1.8} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <select
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="field appearance-none ps-9 pe-9 cursor-pointer"
+          >
+            <option value="">{t.allCities}</option>
+            {CITIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <IconChevronDown size={16} stroke={1.8} className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative flex-1 min-w-[140px]">
+          <IconGavel size={16} stroke={1.8} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <select
+            value={spec}
+            onChange={(e) => setSpec(e.target.value)}
+            className="field appearance-none ps-9 pe-9 cursor-pointer"
+          >
+            <option value="">{t.allSpecs}</option>
+            {SPECS.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <IconChevronDown size={16} stroke={1.8} className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
       </div>
 
       {/* Results */}
       <div className="flex flex-col gap-2.5">
         {filtered.length === 0 ? (
-          <div className="text-center text-gray-400 text-sm py-8">
-            🔍 {t.noResults}
+          <div className="flex flex-col items-center text-center text-slate-400 text-sm py-10 gap-2">
+            <IconSearch size={28} stroke={1.6} className="text-slate-300" />
+            {t.noResults}
           </div>
         ) : (
           filtered.map((l, i) => <LawyerCard key={i} l={l} />)
@@ -114,7 +137,7 @@ export default function LawyersTab({ lang }: { lang: Lang }) {
 
       {/* Bar Council note */}
       <div
-        className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 mt-3.5 mb-20"
+        className="card bg-slate-50/80 p-3.5 text-xs text-slate-600 mt-3.5 mb-20 leading-relaxed [&_a]:text-brand-700 [&_a]:font-medium [&_a:hover]:underline"
         dangerouslySetInnerHTML={{ __html: t.barNote }}
       />
     </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { IconScale, IconAlertCircle } from '@tabler/icons-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
@@ -48,74 +49,77 @@ export default function LoginPage() {
   const displayError = formError ?? (oauthError ? 'Google sign-in failed. Please try again.' : null);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="mb-8 text-center">
-        <div className="inline-block bg-green-800 text-white text-lg font-black px-3 py-1.5 rounded-xl tracking-tight mb-3">
-          MRA
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-brand-glow mb-4">
+          <IconScale size={28} stroke={1.9} />
         </div>
-        <h1 className="text-xl font-bold text-gray-800">Sign in to My Rights App</h1>
-        <p className="text-sm text-gray-500 mt-1">Free legal information for Pakistani citizens</p>
+        <h1 className="font-display text-2xl font-extrabold text-slate-800 tracking-tight">Sign in to My Rights App</h1>
+        <p className="text-sm text-slate-500 mt-1.5">Free legal information for Pakistani citizens</p>
       </div>
 
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="w-full max-w-sm card-pop p-6">
         {/* Google OAuth */}
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="btn btn-secondary w-full"
         >
           <GoogleIcon />
           Continue with Google
         </button>
 
-        <div className="relative my-4">
+        <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-white px-2 text-xs text-gray-400">or</span>
+            <span className="bg-white px-2.5 text-xs text-slate-400">or</span>
           </div>
         </div>
 
-        <form onSubmit={handleEmailLogin} className="space-y-3">
+        <form onSubmit={handleEmailLogin} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              className="field"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              className="field"
             />
           </div>
 
           {displayError && (
-            <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{displayError}</p>
+            <p className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2.5 rounded-xl">
+              <IconAlertCircle size={15} stroke={1.9} className="flex-shrink-0" />
+              {displayError}
+            </p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-800 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-1"
+            className="btn btn-primary w-full mt-1"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-500 mt-4">
+        <p className="text-center text-xs text-slate-500 mt-5">
           No account?{' '}
-          <Link href="/signup" className="text-green-700 font-medium hover:underline">
+          <Link href="/signup" className="text-brand-700 font-semibold hover:underline">
             Sign up free
           </Link>
         </p>
