@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ComponentType } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   IconShieldHalf,
   IconUsersGroup,
@@ -371,8 +373,8 @@ export default function AskTab({ lang }: { lang: Lang }) {
                 <span className="badge bg-brand-100 text-brand-700">AI</span>
               </div>
               {msg.text ? (
-                <div className="text-sm leading-relaxed whitespace-pre-wrap break-words text-slate-700">
-                  {msg.text}
+                <div className="text-sm leading-relaxed break-words text-slate-700 markdown-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                   {msg.streaming && (
                     <span className="inline-block w-0.5 h-3.5 bg-brand-600 ml-0.5 align-middle animate-blink" />
                   )}
